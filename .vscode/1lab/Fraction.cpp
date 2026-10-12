@@ -114,3 +114,65 @@ Fraction Fraction::divide(const Fraction& other) const {
     return Fraction(numerator_ * other.denominator_,
                     denominator_ * other.numerator_);
 }
+
+// 2 lab
+
+Fraction& Fraction::operator=(const Fraction& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    numerator_ = other.numerator_;
+    denominator_ = other.denominator_;
+
+    delete[] string_rep_;
+    if (other.string_rep_) {
+        string_rep_ = new char[strlen(other.string_rep_) + 1];
+        strcpy(string_rep_, other.string_rep_);
+    } else {
+        string_rep_ = nullptr;
+    }
+
+    return *this;
+}
+
+Fraction::operator float() const {
+    return static_cast<float>(numerator_) / static_cast<float>(denominator_);
+}
+
+Fraction Fraction::operator+(const Fraction& other) const {
+    return this->add(other);
+}
+
+Fraction Fraction::operator-(const Fraction& other) const {
+    return this->substract(other);
+}
+
+Fraction Fraction::operator+(int number) const {
+    return Fraction(numerator_ + number * denominator_, denominator_);
+}
+
+Fraction Fraction::operator-(int number) const {
+    return Fraction(numerator_ - number * denominator_, denominator_);
+}
+
+Fraction operator+(int number, const Fraction& fraction) {
+    return Fraction(number * fraction.denominator_ + fraction.numerator_,
+                    fraction.denominator_);
+}
+
+Fraction operator-(int number, const Fraction& fraction) {
+    return Fraction(number * fraction.denominator_ - fraction.numerator_,
+                    fraction.denominator_);
+}
+
+// Fraction operator+(const Fraction& lhs, const Fraction& rhs) {
+//     return Fraction(
+//         lhs.numerator_ * rhs.denominator_ + rhs.numerator_ *
+//         lhs.denominator_, lhs.denominator_ * rhs.denominator_);
+// }
+// Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
+//     return Fraction(
+//         lhs.numerator_ * rhs.denominator_ - rhs.numerator_ *
+//         lhs.denominator_, lhs.denominator_ * rhs.denominator_);
+// }

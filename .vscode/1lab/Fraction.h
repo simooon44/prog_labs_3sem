@@ -4,7 +4,7 @@
 class Fraction {
    public:
     Fraction();
-    Fraction(int num, int den);
+    Fraction(int num, int den = 1);
     Fraction(const Fraction& other);
     ~Fraction();
 
@@ -20,6 +20,24 @@ class Fraction {
     Fraction substract(const Fraction& other) const;
     Fraction multiply(const Fraction& other) const;
     Fraction divide(const Fraction& other) const;
+
+    // 2lab
+
+    Fraction& operator=(const Fraction& other);
+
+    explicit operator float() const;
+
+    Fraction operator+(const Fraction& other) const;
+    Fraction operator-(const Fraction& other) const;
+
+    Fraction operator+(int number) const;
+    Fraction operator-(int number) const;
+
+    friend Fraction operator+(int number, const Fraction& fraction);
+    friend Fraction operator-(int number, const Fraction& fraction);
+
+    // friend Fraction operator+(const Fraction& lhs, const Fraction& rhs);
+    // friend Fraction operator-(const Fraction& lhs, const Fraction& rhs);
 
    private:
     int numerator_;
