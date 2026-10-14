@@ -25,7 +25,7 @@ class Fraction {
 
     Fraction& operator=(const Fraction& other);
 
-    explicit operator float() const;
+    operator float() const;
 
     Fraction operator+(const Fraction& other) const;
     Fraction operator-(const Fraction& other) const;
