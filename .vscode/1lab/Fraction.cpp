@@ -140,39 +140,39 @@ Fraction::operator float() const {
     return static_cast<float>(numerator_) / static_cast<float>(denominator_);
 }
 
-Fraction Fraction::operator+(const Fraction& other) const {
-    return this->add(other);
-}
-
-Fraction Fraction::operator-(const Fraction& other) const {
-    return this->substract(other);
-}
-
-Fraction Fraction::operator+(int number) const {
-    return Fraction(numerator_ + number * denominator_, denominator_);
-}
-
-Fraction Fraction::operator-(int number) const {
-    return Fraction(numerator_ - number * denominator_, denominator_);
-}
-
-Fraction operator+(int number, const Fraction& fraction) {
-    return Fraction(number * fraction.denominator_ + fraction.numerator_,
-                    fraction.denominator_);
-}
-
-Fraction operator-(int number, const Fraction& fraction) {
-    return Fraction(number * fraction.denominator_ - fraction.numerator_,
-                    fraction.denominator_);
-}
-
-// Fraction operator+(const Fraction& lhs, const Fraction& rhs) {
-//     return Fraction(
-//         lhs.numerator_ * rhs.denominator_ + rhs.numerator_ *
-//         lhs.denominator_, lhs.denominator_ * rhs.denominator_);
+// Fraction Fraction::operator+(const Fraction& other) const {
+//     return this->add(other);
 // }
-// Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
-//     return Fraction(
-//         lhs.numerator_ * rhs.denominator_ - rhs.numerator_ *
-//         lhs.denominator_, lhs.denominator_ * rhs.denominator_);
+
+// Fraction Fraction::operator-(const Fraction& other) const {
+//     return this->substract(other);
 // }
+
+// Fraction Fraction::operator+(int number) const {
+//     return Fraction(numerator_ + number * denominator_, denominator_);
+// }
+
+// Fraction Fraction::operator-(int number) const {
+//     return Fraction(numerator_ - number * denominator_, denominator_);
+// }
+
+// Fraction operator+(int number, const Fraction& fraction) {
+//     return Fraction(number * fraction.denominator_ + fraction.numerator_,
+//                     fraction.denominator_);
+// }
+
+// Fraction operator-(int number, const Fraction& fraction) {
+//     return Fraction(number * fraction.denominator_ - fraction.numerator_,
+//                     fraction.denominator_);
+// }
+
+Fraction operator+(const Fraction& lhs, const Fraction& rhs) {
+    return Fraction(
+        lhs.numerator_ * rhs.denominator_ + rhs.numerator_ * lhs.denominator_,
+        lhs.denominator_ * rhs.denominator_);
+}
+Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
+    return Fraction(
+        lhs.numerator_ * rhs.denominator_ - rhs.numerator_ * lhs.denominator_,
+        lhs.denominator_ * rhs.denominator_);
+}

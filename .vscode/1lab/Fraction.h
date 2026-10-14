@@ -27,17 +27,17 @@ class Fraction {
 
     explicit operator float() const;
 
-    Fraction operator+(const Fraction& other) const;
-    Fraction operator-(const Fraction& other) const;
+    // Fraction operator+(const Fraction& other) const;
+    // Fraction operator-(const Fraction& other) const;
 
-    Fraction operator+(int number) const;
-    Fraction operator-(int number) const;
+    // Fraction operator+(int number) const;
+    // Fraction operator-(int number) const;
 
-    friend Fraction operator+(int number, const Fraction& fraction);
-    friend Fraction operator-(int number, const Fraction& fraction);
+    // friend Fraction operator+(int number, const Fraction& fraction);
+    // friend Fraction operator-(int number, const Fraction& fraction);
 
-    // friend Fraction operator+(const Fraction& lhs, const Fraction& rhs);
-    // friend Fraction operator-(const Fraction& lhs, const Fraction& rhs);
+    friend Fraction operator+(const Fraction& lhs, const Fraction& rhs);
+    friend Fraction operator-(const Fraction& lhs, const Fraction& rhs);
 
    private:
     int numerator_;
