@@ -1,4 +1,6 @@
 #include <cstring>
+#include <fstream>
+#include <sstream>
 
 #include "../googletest/include/gtest/gtest.h"
 #include "Fraction.h"
@@ -271,4 +273,235 @@ TEST(FractionTest2, OpIntMinusFractionNegative) {
     Fraction f(-1, 4);
     Fraction res = 1 - f;
     EXPECT_STREQ(res.c_str(), "5/4");
+}
+
+// 3lab
+
+TEST(FractionTest3, OstreamOutputStandard) {
+    Fraction f(3, 4);
+    stringstream ss;
+    ss << f;
+    EXPECT_EQ(ss.str(), "3/4");
+}
+
+TEST(FractionTest3, OstreamOutputReduced) {
+    Fraction f(6, 8);
+    stringstream ss;
+    ss << f;
+    EXPECT_EQ(ss.str(), "1/2");
+}
+
+TEST(FractionTest3, OstreamOutputNegative) {
+    Fraction f(-5, 9);
+    stringstream ss;
+    ss << f;
+    EXPECT_EQ(ss.str(), "-5/9");
+}
+
+TEST(FractionTest3, IstreamInputStandardFraction) {
+    stringstream ss("5/7");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 5);
+    EXPECT_EQ(f.get_denominator(), 7);
+}
+
+TEST(FractionTest3, IstreamInputSingleInteger) {
+    stringstream ss("9");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 9);
+    EXPECT_EQ(f.get_denominator(), 1);
+}
+
+TEST(FractionTest3, IstreamInputFractionWithSpaces) {
+    stringstream ss(" 2 / 3 ");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 2);
+    EXPECT_EQ(f.get_denominator(), 3);
+}
+
+TEST(FractionTest3, IstreamInputSingleIntegerWithSpaces) {
+    stringstream ss("   15   ");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 15);
+    EXPECT_EQ(f.get_denominator(), 1);
+}
+
+TEST(FractionTest3, IstreamInputReductionOnFly) {
+    stringstream ss("10/20");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 1);
+    EXPECT_EQ(f.get_denominator(), 2);
+}
+
+TEST(FractionTest3, IstreamInputNegativeDenominator) {
+    stringstream ss("4/-2");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), -2);
+    EXPECT_EQ(f.get_denominator(), 1);
+}
+
+TEST(FractionTest3, IstreamInputZeroNumerator) {
+    stringstream ss("0/45");
+    Fraction f;
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 0);
+    EXPECT_EQ(f.get_denominator(), 1);
+}
+
+TEST(FractionTest3, ChainedOstream) {
+    Fraction f1(1, 2), f2(3, 4);
+    stringstream ss;
+    ss << f1 << " and " << f2;
+    EXPECT_EQ(ss.str(), "1/2 and 3/4");
+}
+
+TEST(FractionTest3, ChainedIstream) {
+    stringstream ss("3/8 7");
+    Fraction f1, f2;
+    ss >> f1 >> f2;
+    EXPECT_EQ(f1.get_numerator(), 3);
+    EXPECT_EQ(f1.get_denominator(), 8);
+    EXPECT_EQ(f2.get_numerator(), 7);
+    EXPECT_EQ(f2.get_denominator(), 1);
+}
+
+TEST(FractionTest3, TextFileWriteAndReadSingle) {
+    string filename = "test_single.txt";
+    {
+        ofstream out(filename);
+        Fraction f(7, 3);
+        out << f;
+    }
+    Fraction f_in;
+    {
+        ifstream in(filename);
+        in >> f_in;
+    }
+    remove(filename.c_str());
+    EXPECT_EQ(f_in.get_numerator(), 7);
+    EXPECT_EQ(f_in.get_denominator(), 3);
+}
+
+TEST(FractionTest3, TextFileWriteAndReadMultiple) {
+    string filename = "test_multi.txt";
+    {
+        ofstream out(filename);
+        Fraction f1(1, 2), f2(5), f3(-3, 4);
+        out << f1 << "\n" << f2 << "\n" << f3 << "\n";
+    }
+    Fraction r1, r2, r3;
+    {
+        ifstream in(filename);
+        in >> r1 >> r2 >> r3;
+    }
+    remove(filename.c_str());
+    EXPECT_STREQ(r1.c_str(), "1/2");
+    EXPECT_STREQ(r2.c_str(), "5/1");
+    EXPECT_STREQ(r3.c_str(), "-3/4");
+}
+
+TEST(FractionTest3, BinaryFileWriteAndReadSingle) {
+    string filename = "test_single.bin";
+    {
+        ofstream out(filename, ios::binary);
+        Fraction f(11, 4);
+        int num = f.get_numerator();
+        int den = f.get_denominator();
+        out.write(reinterpret_cast<char*>(&num), sizeof(num));
+        out.write(reinterpret_cast<char*>(&den), sizeof(den));
+    }
+    int num_in = 0, den_in = 1;
+    {
+        ifstream in(filename, ios::binary);
+        in.read(reinterpret_cast<char*>(&num_in), sizeof(num_in));
+        in.read(reinterpret_cast<char*>(&den_in), sizeof(den_in));
+    }
+    remove(filename.c_str());
+    Fraction f_res(num_in, den_in);
+    EXPECT_EQ(f_res.get_numerator(), 11);
+    EXPECT_EQ(f_res.get_denominator(), 4);
+}
+
+TEST(FractionTest3, BinaryFileArrayStorageIntegrity) {
+    string filename = "test_array.bin";
+    size_t size = 3;
+    {
+        ofstream out(filename, ios::binary);
+        out.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+        // Явно создаем массив из 3-х элементов дробей
+        Fraction arr[3] = {Fraction(1, 3), Fraction(8), Fraction(-2, 5)};
+
+        for (int i = 0; i < 3; ++i) {
+            int num = arr[i].get_numerator();
+            int den = arr[i].get_denominator();
+            out.write(reinterpret_cast<char*>(&num), sizeof(num));
+            out.write(reinterpret_cast<char*>(&den), sizeof(den));
+        }
+    }
+    size_t size_in = 0;
+    Fraction r1, r2, r3;
+    {
+        ifstream in(filename, ios::binary);
+        in.read(reinterpret_cast<char*>(&size_in), sizeof(size_in));
+        int n1, d1, n2, d2, n3, d3;
+        in.read(reinterpret_cast<char*>(&n1), sizeof(n1));
+        in.read(reinterpret_cast<char*>(&d1), sizeof(d1));
+        in.read(reinterpret_cast<char*>(&n2), sizeof(n2));
+        in.read(reinterpret_cast<char*>(&d2), sizeof(d2));
+        in.read(reinterpret_cast<char*>(&n3), sizeof(n3));
+        in.read(reinterpret_cast<char*>(&d3), sizeof(d3));
+        r1 = Fraction(n1, d1);
+        r2 = Fraction(n2, d2);
+        r3 = Fraction(n3, d3);
+    }
+    remove(filename.c_str());
+    EXPECT_EQ(size_in, 3);
+    EXPECT_STREQ(r1.c_str(), "1/3");
+    EXPECT_STREQ(r2.c_str(), "8/1");
+    EXPECT_STREQ(r3.c_str(), "-2/5");
+}
+
+TEST(FractionTest3, ObjectCounterConsistencyInIO) {
+    int initial = Fraction::get_object_count();
+    {
+        stringstream ss("4/5");
+        Fraction f;
+        ss >> f;
+        EXPECT_EQ(Fraction::get_object_count(), initial + 1);
+    }
+    EXPECT_EQ(Fraction::get_object_count(), initial);
+}
+
+TEST(FractionTest3, InvalidInputStreamStateStateIntact) {
+    stringstream ss("not_a_fraction");
+    Fraction f(2, 3);
+    ss >> f;
+    EXPECT_EQ(f.get_numerator(), 2);
+    EXPECT_EQ(f.get_denominator(), 3);
+}
+
+TEST(FractionTest3, IstreamInputZeroDenominatorHandling) {
+    stringstream ss("5/0");
+    Fraction f;
+    ss >> f;
+    EXPECT_NE(f.get_denominator(), 0);
+}
+
+TEST(FractionTest3, CStrRepresentationPostIstreamUpdate) {
+    stringstream ss("7/14");
+    Fraction f;
+    ss >> f;
+    EXPECT_STREQ(f.c_str(), "1/2");
+}
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

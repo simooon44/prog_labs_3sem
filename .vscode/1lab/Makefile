@@ -1,10 +1,13 @@
 CXX = g++
 CXXFLAGS = -I. -I../googletest/include -I../googletest
 
-all: test.exe
+all: app.exe test.exe
 
-test.exe: obj obj/fraction_tests.o obj/Fraction.o obj/gtest-all.o obj/main.o
-	$(CXX) obj/fraction_tests.o obj/Fraction.o obj/gtest-all.o obj/main.o -o test.exe
+app.exe: obj obj/Fraction.o obj/main.o
+	$(CXX) obj/Fraction.o obj/main.o -o app.exe
+
+test.exe: obj obj/fraction_tests.o obj/Fraction.o obj/gtest-all.o
+	$(CXX) obj/fraction_tests.o obj/Fraction.o obj/gtest-all.o -o test.exe
 
 obj:
 	mkdir obj
@@ -21,6 +24,9 @@ obj/fraction_tests.o: fraction_tests.cpp Fraction.h
 obj/gtest-all.o: ../googletest/src/gtest-all.cc
 	$(CXX) $(CXXFLAGS) -c ../googletest/src/gtest-all.cc -o obj/gtest-all.o
 
+run: app.exe
+	./app.exe
+
 test: test.exe
 	./test.exe
 
@@ -30,6 +36,9 @@ test1: test.exe
 test2: test.exe
 	./test.exe --gtest_filter=FractionTest2.*
 
+test3: test.exe
+	./test.exe --gtest_filter=FractionTest3.*
+
 clean:
 	rm -rf obj
-	rm -f test.exe
+	rm -f test.exe app.exe

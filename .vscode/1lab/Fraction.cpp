@@ -150,3 +150,31 @@ Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
         lhs.numerator_ * rhs.denominator_ - rhs.numerator_ * lhs.denominator_,
         lhs.denominator_ * rhs.denominator_);
 }
+
+// 3lab
+
+ostream& operator<<(ostream& os, const Fraction& fraction) {
+    os << fraction.numerator_ << "/" << fraction.denominator_;
+    return os;
+}
+
+istream& operator>>(istream& is, Fraction& fraction) {
+    int num = 0;
+    int den = 1;
+
+    is >> num;
+
+    is >> ws;
+    if (is.peek() == '/') {
+        char slash;
+        is >> slash;
+        is >> den;
+    } else {
+        den = 1;
+    }
+
+    if (is) {
+        fraction.set_values(num, den);
+    }
+    return is;
+}
