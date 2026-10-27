@@ -7,16 +7,16 @@
 using namespace std;
 
 void print_menu() {
-    cout << "\n=== МЕНЮ ЛАБОРАТОРНОЙ РАБОТЫ №3 ===\n";
-    cout << "1. Ввести дробь с клавиатуры и вывести на экран\n";
-    cout << "2. Создать массив дробей вручную\n";
-    cout << "3. Сохранить текущий массив в ТЕКСТОВЫЙ файл\n";
-    cout << "4. Загрузить массив из ТЕКСТОВОГО файла\n";
-    cout << "5. Сохранить текущий массив в БИНАРНЫЙ файл\n";
-    cout << "6. Загрузить массив из БИНАРНОГО файла\n";
-    cout << "7. Вывести текущий массив дробей в консоль\n";
-    cout << "0. Выход\n";
-    cout << "Выберите действие: ";
+    cout << "\nMENU\n";
+    cout << "1. Input fraction\n";
+    cout << "2. Create array manually\n";
+    cout << "3. Save to TEXT file\n";
+    cout << "4. Load from TEXT file\n";
+    cout << "5. Save to BINARY file\n";
+    cout << "6. Load from BINARY file\n";
+    cout << "7. Print current array\n";
+    cout << "0. Exit\n";
+    cout << "Select option: ";
 }
 
 int main() {
@@ -26,22 +26,20 @@ int main() {
     while (choice != 0) {
         print_menu();
         if (!(cin >> choice)) {
-            cout << "Ошибка ввода числового значения команды!\n";
-            cin.clear();
-            cin.ignore(10000, '\n');
+            cout << "Error\n";
+            choice = 0;
             continue;
         }
 
         switch (choice) {
             case 1: {
                 Fraction f;
-                cout << "Введите дробь (в формате 3/4 или 4): ";
+                cout << "Enter a fraction (format 3/4 or 4): ";
                 cin >> f;
                 if (cin) {
-                    cout << "Вы ввели дробь: " << f
-                         << " (внутренняя строка: " << f.c_str() << ")\n";
+                    cout << "You entered: " << f << "\n";
                 } else {
-                    cout << "Некорректный формат ввода.\n";
+                    cout << "Error!\n";
                     cin.clear();
                     cin.ignore(10000, '\n');
                 }
@@ -49,69 +47,69 @@ int main() {
             }
             case 2: {
                 int count;
-                cout << "Сколько дробей вы хотите добавить? ";
+                cout << "How many fractions do you want to add? ";
                 cin >> count;
                 current_fractions.clear();
-                for (int i = 0; i < count; ++i) {
+                for (int i = 0; i < count; i++) {
                     Fraction f;
-                    cout << "Дробь №" << i + 1 << ": ";
+                    cout << "Fraction #" << i + 1 << ": ";
                     cin >> f;
                     current_fractions.push_back(f);
                 }
-                cout << "Массив из " << current_fractions.size()
-                     << " элементов успешно создан.\n";
+                cout << "Array of " << (int)current_fractions.size()
+                     << " elements successfully created.\n";
                 break;
             }
             case 3: {
                 if (current_fractions.empty()) {
-                    cout << "Массив пуст. Нечего сохранять.\n";
+                    cout << "Array is empty. Nothing to save.\n";
                     break;
                 }
                 ofstream out("fractions.txt");
                 if (!out) {
-                    cout << "Не удалось открыть файл для записи.\n";
+                    cout << "Error!\n";
                     break;
                 }
-                // Записываем количество элементов первой строкой
-                out << current_fractions.size() << "\n";
+                int count = (int)current_fractions.size();
+                out << count << "\n";
                 for (const auto& f : current_fractions) {
                     out << f << "\n";
                 }
-                cout << "Успешно сохранено в fractions.txt\n";
+                cout << "Successfully saved to fractions.txt\n";
                 break;
             }
             case 4: {
                 ifstream in("fractions.txt");
                 if (!in) {
-                    cout << "Файл fractions.txt не найден.\n";
+                    cout << "Error!\n";
                     break;
                 }
-                size_t count = 0;
+                int count = 0;
                 if (!(in >> count)) {
-                    cout << "Ошибка чтения структуры файла.\n";
+                    cout << "Error!\n";
                     break;
                 }
                 current_fractions.clear();
-                for (size_t i = 0; i < count; ++i) {
+                for (int i = 0; i < count; i++) {
                     Fraction f;
                     in >> f;
                     current_fractions.push_back(f);
                 }
-                cout << "Успешно загружено " << current_fractions.size()
-                     << " объектов из текстового файла.\n";
+                cout << "Successfully loaded " << (int)current_fractions.size()
+                     << " objects from text file.\n";
                 break;
             }
             case 5: {
                 if (current_fractions.empty()) {
-                    cout << "Массив пуст. Нечего сохранять.\n";
+                    cout << "Array is empty. Nothing to save.\n";
                     break;
                 }
                 ofstream out("fractions.bin", ios::binary);
                 if (!out) {
-                    cout << "Не удалось открыть бинарный файл для записи.\n";
+                    cout << "Error!\n";
                     break;
                 }
-                size_t count = current_fractions.size();
+                int count = (int)current_fractions.size();
                 out.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
                 for (const auto& f : current_fractions) {
@@ -120,35 +118,36 @@ int main() {
                     out.write(reinterpret_cast<const char*>(&num), sizeof(num));
                     out.write(reinterpret_cast<const char*>(&den), sizeof(den));
                 }
-                cout << "Успешно сохранено в бинарный файл fractions.bin\n";
+                cout << "Successfully saved to binary file fractions.bin\n";
                 break;
             }
             case 6: {
                 ifstream in("fractions.bin", ios::binary);
                 if (!in) {
-                    cout << "Файл fractions.bin не найден.\n";
+                    cout << "Error!\n";
                     break;
                 }
-                size_t count = 0;
+                int count = 0;
                 in.read(reinterpret_cast<char*>(&count), sizeof(count));
 
                 current_fractions.clear();
-                for (size_t i = 0; i < count; ++i) {
+                for (int i = 0; i < count; i++) {
                     int num = 0, den = 1;
                     in.read(reinterpret_cast<char*>(&num), sizeof(num));
                     in.read(reinterpret_cast<char*>(&den), sizeof(den));
-                    current_fractions.emplace_back(num, den);
+                    current_fractions.push_back(Fraction(num, den));
                 }
-                cout << "Успешно загружено " << current_fractions.size()
-                     << " объектов из бинарного файла.\n";
+                cout << "Successfully loaded " << (int)current_fractions.size()
+                     << " objects from binary file.\n";
                 break;
             }
             case 7: {
                 if (current_fractions.empty()) {
-                    cout << "Массив в памяти пуст.\n";
+                    cout << "Array in memory is empty.\n";
                 } else {
-                    cout << "Текущий массив дробей:\n";
-                    for (size_t i = 0; i < current_fractions.size(); ++i) {
+                    cout << "Current array of fractions:\n";
+                    int count = (int)current_fractions.size();
+                    for (int i = 0; i < count; ++i) {
                         cout << "[" << i << "]: " << current_fractions[i]
                              << "\n";
                     }
@@ -156,10 +155,10 @@ int main() {
                 break;
             }
             case 0:
-                cout << "Выход из программы.\n";
+                cout << "Exiting the program.\n";
                 break;
             default:
-                cout << "Неизвестная команда!\n";
+                cout << "Error: Unknown command!\n";
                 break;
         }
     }

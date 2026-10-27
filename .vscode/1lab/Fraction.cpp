@@ -162,19 +162,19 @@ istream& operator>>(istream& is, Fraction& fraction) {
     int num = 0;
     int den = 1;
 
-    is >> num;
+    if (!(is >> num)) {
+        return is;
+    }
 
-    is >> ws;
+    while (is.peek() == ' ' || is.peek() == '\t') {
+        is.get();
+    }
+
     if (is.peek() == '/') {
-        char slash;
-        is >> slash;
+        is.get();
         is >> den;
-    } else {
-        den = 1;
     }
 
-    if (is) {
-        fraction.set_values(num, den);
-    }
+    fraction.set_values(num, den);
     return is;
 }

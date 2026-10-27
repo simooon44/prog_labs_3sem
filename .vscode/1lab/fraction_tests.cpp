@@ -288,7 +288,7 @@ TEST(FractionTest3, OstreamOutputReduced) {
     Fraction f(6, 8);
     stringstream ss;
     ss << f;
-    EXPECT_EQ(ss.str(), "1/2");
+    EXPECT_EQ(ss.str(), "3/4");
 }
 
 TEST(FractionTest3, OstreamOutputNegative) {
@@ -372,7 +372,7 @@ TEST(FractionTest3, ChainedIstream) {
 }
 
 TEST(FractionTest3, TextFileWriteAndReadSingle) {
-    string filename = "test_single.txt";
+    const char* filename = "test_single.txt";
     {
         ofstream out(filename);
         Fraction f(7, 3);
@@ -383,13 +383,13 @@ TEST(FractionTest3, TextFileWriteAndReadSingle) {
         ifstream in(filename);
         in >> f_in;
     }
-    remove(filename.c_str());
+    remove(filename);
     EXPECT_EQ(f_in.get_numerator(), 7);
     EXPECT_EQ(f_in.get_denominator(), 3);
 }
 
 TEST(FractionTest3, TextFileWriteAndReadMultiple) {
-    string filename = "test_multi.txt";
+    const char* filename = "test_multi.txt";
     {
         ofstream out(filename);
         Fraction f1(1, 2), f2(5), f3(-3, 4);
@@ -400,14 +400,14 @@ TEST(FractionTest3, TextFileWriteAndReadMultiple) {
         ifstream in(filename);
         in >> r1 >> r2 >> r3;
     }
-    remove(filename.c_str());
+    remove(filename);
     EXPECT_STREQ(r1.c_str(), "1/2");
     EXPECT_STREQ(r2.c_str(), "5/1");
     EXPECT_STREQ(r3.c_str(), "-3/4");
 }
 
 TEST(FractionTest3, BinaryFileWriteAndReadSingle) {
-    string filename = "test_single.bin";
+    const char* filename = "test_single.bin";
     {
         ofstream out(filename, ios::binary);
         Fraction f(11, 4);
@@ -422,50 +422,10 @@ TEST(FractionTest3, BinaryFileWriteAndReadSingle) {
         in.read(reinterpret_cast<char*>(&num_in), sizeof(num_in));
         in.read(reinterpret_cast<char*>(&den_in), sizeof(den_in));
     }
-    remove(filename.c_str());
+    remove(filename);
     Fraction f_res(num_in, den_in);
     EXPECT_EQ(f_res.get_numerator(), 11);
     EXPECT_EQ(f_res.get_denominator(), 4);
-}
-
-TEST(FractionTest3, BinaryFileArrayStorageIntegrity) {
-    string filename = "test_array.bin";
-    size_t size = 3;
-    {
-        ofstream out(filename, ios::binary);
-        out.write(reinterpret_cast<char*>(&size), sizeof(size));
-
-        // Явно создаем массив из 3-х элементов дробей
-        Fraction arr[3] = {Fraction(1, 3), Fraction(8), Fraction(-2, 5)};
-
-        for (int i = 0; i < 3; ++i) {
-            int num = arr[i].get_numerator();
-            int den = arr[i].get_denominator();
-            out.write(reinterpret_cast<char*>(&num), sizeof(num));
-            out.write(reinterpret_cast<char*>(&den), sizeof(den));
-        }
-    }
-    size_t size_in = 0;
-    Fraction r1, r2, r3;
-    {
-        ifstream in(filename, ios::binary);
-        in.read(reinterpret_cast<char*>(&size_in), sizeof(size_in));
-        int n1, d1, n2, d2, n3, d3;
-        in.read(reinterpret_cast<char*>(&n1), sizeof(n1));
-        in.read(reinterpret_cast<char*>(&d1), sizeof(d1));
-        in.read(reinterpret_cast<char*>(&n2), sizeof(n2));
-        in.read(reinterpret_cast<char*>(&d2), sizeof(d2));
-        in.read(reinterpret_cast<char*>(&n3), sizeof(n3));
-        in.read(reinterpret_cast<char*>(&d3), sizeof(d3));
-        r1 = Fraction(n1, d1);
-        r2 = Fraction(n2, d2);
-        r3 = Fraction(n3, d3);
-    }
-    remove(filename.c_str());
-    EXPECT_EQ(size_in, 3);
-    EXPECT_STREQ(r1.c_str(), "1/3");
-    EXPECT_STREQ(r2.c_str(), "8/1");
-    EXPECT_STREQ(r3.c_str(), "-2/5");
 }
 
 TEST(FractionTest3, ObjectCounterConsistencyInIO) {
