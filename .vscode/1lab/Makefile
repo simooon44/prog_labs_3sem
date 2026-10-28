@@ -42,3 +42,9 @@ test3: test.exe
 clean:
 	rm -rf obj
 	rm -f test.exe app.exe
+	rm -f fractions.bin
+	rm -f fractions.txt
+
+clean1:
+	rm -f fractions.bin
+	rm -f fractions.txt

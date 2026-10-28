@@ -3,7 +3,9 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -177,4 +179,23 @@ istream& operator>>(istream& is, Fraction& fraction) {
 
     fraction.set_values(num, den);
     return is;
+}
+
+bool Fraction::save_to_binary(const std::vector<Fraction>& fractions,
+                              const char* filename) {
+    ofstream out(filename, ios::binary);
+    if (!out) {
+        return false;
+    }
+
+    int count = (int)fractions.size();
+    out.write(reinterpret_cast<const char*>(&count), sizeof(count));
+
+    for (const auto& f : fractions) {
+        int num = f.get_numerator();
+        int den = f.get_denominator();
+        out.write(reinterpret_cast<const char*>(&num), sizeof(num));
+        out.write(reinterpret_cast<const char*>(&den), sizeof(den));
+    }
+    return true;
 }

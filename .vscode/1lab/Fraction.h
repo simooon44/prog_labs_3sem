@@ -1,6 +1,7 @@
 #ifndef FRACTION_H_
 #define FRACTION_H_
 #include <iostream>
+#include <vector>
 class Fraction {
    public:
     Fraction();
@@ -34,6 +35,9 @@ class Fraction {
 
     friend std::ostream& operator<<(std::ostream& os, const Fraction& fraction);
     friend std::istream& operator>>(std::istream& is, Fraction& fraction);
+
+    static bool save_to_binary(const std::vector<Fraction>& fractions,
+                               const char* filename);
 
    private:
     int numerator_;

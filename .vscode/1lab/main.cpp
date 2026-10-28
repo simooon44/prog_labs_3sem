@@ -104,21 +104,13 @@ int main() {
                     cout << "Array is empty. Nothing to save.\n";
                     break;
                 }
-                ofstream out("fractions.bin", ios::binary);
-                if (!out) {
-                    cout << "Error!\n";
-                    break;
-                }
-                int count = (int)current_fractions.size();
-                out.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
-                for (const auto& f : current_fractions) {
-                    int num = f.get_numerator();
-                    int den = f.get_denominator();
-                    out.write(reinterpret_cast<const char*>(&num), sizeof(num));
-                    out.write(reinterpret_cast<const char*>(&den), sizeof(den));
+                if (Fraction::save_to_binary(current_fractions,
+                                             "fractions.bin")) {
+                    cout << "Successfully saved to binary file fractions.bin\n";
+                } else {
+                    cout << "Error!\n";
                 }
-                cout << "Successfully saved to binary file fractions.bin\n";
                 break;
             }
             case 6: {

@@ -409,21 +409,22 @@ TEST(FractionTest3, TextFileWriteAndReadMultiple) {
 TEST(FractionTest3, BinaryFileWriteAndReadSingle) {
     const char* filename = "test_single.bin";
     {
-        ofstream out(filename, ios::binary);
-        Fraction f(11, 4);
-        int num = f.get_numerator();
-        int den = f.get_denominator();
-        out.write(reinterpret_cast<char*>(&num), sizeof(num));
-        out.write(reinterpret_cast<char*>(&den), sizeof(den));
+        vector<Fraction> arr;
+        arr.push_back(Fraction(11, 4));
+        Fraction::save_to_binary(arr, filename);
     }
+    int count_in = 0;
     int num_in = 0, den_in = 1;
     {
         ifstream in(filename, ios::binary);
+        in.read(reinterpret_cast<char*>(&count_in), sizeof(count_in));
         in.read(reinterpret_cast<char*>(&num_in), sizeof(num_in));
         in.read(reinterpret_cast<char*>(&den_in), sizeof(den_in));
     }
     remove(filename);
     Fraction f_res(num_in, den_in);
+
+    EXPECT_EQ(count_in, 1);
     EXPECT_EQ(f_res.get_numerator(), 11);
     EXPECT_EQ(f_res.get_denominator(), 4);
 }
