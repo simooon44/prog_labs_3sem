@@ -392,8 +392,8 @@ TEST(FractionTest3, TextFileWriteAndReadMultiple) {
     const char* filename = "test_multi.txt";
     {
         ofstream out(filename);
-        Fraction f1(1, 2), f2(5), f3(-3, 4);
-        out << f1 << "\n" << f2 << "\n" << f3 << "\n";
+        Fraction arr[3] = {Fraction(1, 2), Fraction(5), Fraction(-3, 4)};
+        Fraction::save_to_text(arr, 3, out);
     }
     Fraction r1, r2, r3;
     {
@@ -409,24 +409,118 @@ TEST(FractionTest3, TextFileWriteAndReadMultiple) {
 TEST(FractionTest3, BinaryFileWriteAndReadSingle) {
     const char* filename = "test_single.bin";
     {
-        vector<Fraction> arr;
-        arr.push_back(Fraction(11, 4));
-        Fraction::save_to_binary(arr, filename);
+        Fraction arr[1] = {Fraction(11, 4)};
+        ofstream out(filename, ios::binary);
+        Fraction::save_to_binary(arr, 1, out);
     }
-    int count_in = 0;
     int num_in = 0, den_in = 1;
     {
         ifstream in(filename, ios::binary);
-        in.read(reinterpret_cast<char*>(&count_in), sizeof(count_in));
         in.read(reinterpret_cast<char*>(&num_in), sizeof(num_in));
         in.read(reinterpret_cast<char*>(&den_in), sizeof(den_in));
     }
     remove(filename);
     Fraction f_res(num_in, den_in);
 
-    EXPECT_EQ(count_in, 1);
     EXPECT_EQ(f_res.get_numerator(), 11);
     EXPECT_EQ(f_res.get_denominator(), 4);
+}
+
+TEST(FractionTest3, BinaryFileWriteAndReadMultiple) {
+    const char* filename = "test_multi_bin.bin";
+
+    {
+        Fraction arr[3] = {Fraction(1, 2), Fraction(3, 4), Fraction(5, 6)};
+        ofstream out(filename, ios::binary);
+        Fraction::save_to_binary(arr, 3, out);
+    }
+
+    Fraction* res = nullptr;
+    int size = 0;
+    int loaded_count = 0;
+    {
+        ifstream in(filename, ios::binary);
+        loaded_count = Fraction::load_from_binary(in, res, size);
+    }
+    remove(filename);
+
+    EXPECT_EQ(loaded_count, 3);
+    EXPECT_EQ(size, 3);
+    ASSERT_NE(res, nullptr);
+    EXPECT_STREQ(res[0].c_str(), "1/2");
+    EXPECT_STREQ(res[1].c_str(), "3/4");
+    EXPECT_STREQ(res[2].c_str(), "5/6");
+
+    delete[] res;
+}
+
+TEST(FractionTest3, TextFileAppend) {
+    const char* filename = "test_append.txt";
+
+    {
+        Fraction arr1[2] = {Fraction(1, 2), Fraction(3, 4)};
+        ofstream out(filename);
+        Fraction::save_to_text(arr1, 2, out);
+    }
+
+    {
+        Fraction arr2[2] = {Fraction(5, 6), Fraction(7, 8)};
+        ofstream out(filename, ios::app);
+        Fraction::save_to_text(arr2, 2, out);
+    }
+
+    Fraction* res = nullptr;
+    int size = 0;
+    int loaded_count = 0;
+    {
+        ifstream in(filename);
+        loaded_count = Fraction::load_from_text(in, res, size);
+    }
+    remove(filename);
+
+    EXPECT_EQ(loaded_count, 4);
+    EXPECT_EQ(size, 4);
+    EXPECT_NE(res, nullptr);
+    EXPECT_STREQ(res[0].c_str(), "1/2");
+    EXPECT_STREQ(res[1].c_str(), "3/4");
+    EXPECT_STREQ(res[2].c_str(), "5/6");
+    EXPECT_STREQ(res[3].c_str(), "7/8");
+
+    delete[] res;
+}
+
+TEST(FractionTest3, BinaryFileAppend) {
+    const char* filename = "test_append.bin";
+
+    {
+        Fraction arr1[2] = {Fraction(1, 3), Fraction(2, 3)};
+        ofstream out(filename, ios::binary);
+        Fraction::save_to_binary(arr1, 2, out);
+    }
+
+    {
+        Fraction arr2[1] = {Fraction(4, 5)};
+        ofstream out(filename, ios::app | ios::binary);
+        Fraction::save_to_binary(arr2, 1, out);
+    }
+
+    Fraction* res = nullptr;
+    int size = 0;
+    int loaded_count = 0;
+    {
+        ifstream in(filename, ios::binary);
+        loaded_count = Fraction::load_from_binary(in, res, size);
+    }
+    remove(filename);
+
+    EXPECT_EQ(loaded_count, 3);
+    EXPECT_EQ(size, 3);
+    EXPECT_NE(res, nullptr);
+    EXPECT_STREQ(res[0].c_str(), "1/3");
+    EXPECT_STREQ(res[1].c_str(), "2/3");
+    EXPECT_STREQ(res[2].c_str(), "4/5");
+
+    delete[] res;
 }
 
 TEST(FractionTest3, ObjectCounterConsistencyInIO) {

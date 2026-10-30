@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <vector>
 
 #include "Fraction.h"
 
@@ -15,12 +14,26 @@ void print_menu() {
     cout << "5. Save to BINARY file\n";
     cout << "6. Load from BINARY file\n";
     cout << "7. Print current array\n";
+    cout << "8. Clear current array in memory\n";
     cout << "0. Exit\n";
     cout << "Select option: ";
 }
 
+void add_fraction(Fraction*& arr, int& size, const Fraction& f) {
+    Fraction* new_arr = new Fraction[size + 1];
+    for (int i = 0; i < size; i++) {
+        new_arr[i] = arr[i];
+    }
+    new_arr[size] = f;
+
+    delete[] arr;
+    arr = new_arr;
+    size++;
+}
+
 int main() {
-    vector<Fraction> current_fractions;
+    Fraction* current_fractions = nullptr;
+    int current_size = 0;
     int choice = -1;
 
     while (choice != 0) {
@@ -49,64 +62,51 @@ int main() {
                 int count;
                 cout << "How many fractions do you want to add? ";
                 cin >> count;
-                current_fractions.clear();
                 for (int i = 0; i < count; i++) {
                     Fraction f;
                     cout << "Fraction #" << i + 1 << ": ";
                     cin >> f;
-                    current_fractions.push_back(f);
+                    add_fraction(current_fractions, current_size, f);
                 }
-                cout << "Array of " << (int)current_fractions.size()
+                cout << "Array of " << count
                      << " elements successfully created.\n";
                 break;
             }
             case 3: {
-                if (current_fractions.empty()) {
+                if (current_size == 0) {
                     cout << "Array is empty. Nothing to save.\n";
                     break;
                 }
-                ofstream out("fractions.txt");
-                if (!out) {
+                ofstream out("fractions.txt", ios::app);
+                if (Fraction::save_to_text(current_fractions, current_size,
+                                           out)) {
+                    cout << "Successfully appended\n";
+                } else {
                     cout << "Error!\n";
-                    break;
                 }
-                int count = (int)current_fractions.size();
-                out << count << "\n";
-                for (const auto& f : current_fractions) {
-                    out << f << "\n";
-                }
-                cout << "Successfully saved to fractions.txt\n";
                 break;
             }
             case 4: {
                 ifstream in("fractions.txt");
                 if (!in) {
-                    cout << "Error!\n";
+                    cout << "Error opening text file!\n";
                     break;
                 }
-                int count = 0;
-                if (!(in >> count)) {
-                    cout << "Error!\n";
-                    break;
-                }
-                current_fractions.clear();
-                for (int i = 0; i < count; i++) {
-                    Fraction f;
-                    in >> f;
-                    current_fractions.push_back(f);
-                }
-                cout << "Successfully loaded " << (int)current_fractions.size()
+                int count = Fraction::load_from_text(in, current_fractions,
+                                                     current_size);
+                cout << "Successfully loaded " << count
                      << " objects from text file.\n";
                 break;
             }
             case 5: {
-                if (current_fractions.empty()) {
+                if (current_size == 0) {
                     cout << "Array is empty. Nothing to save.\n";
                     break;
                 }
 
-                if (Fraction::save_to_binary(current_fractions,
-                                             "fractions.bin")) {
+                ofstream out("fractions.bin", ios::app | ios::binary);
+                if (Fraction::save_to_binary(current_fractions, current_size,
+                                             out)) {
                     cout << "Successfully saved to binary file fractions.bin\n";
                 } else {
                     cout << "Error!\n";
@@ -116,34 +116,33 @@ int main() {
             case 6: {
                 ifstream in("fractions.bin", ios::binary);
                 if (!in) {
-                    cout << "Error!\n";
+                    cout << "Error opening binary file!\n";
                     break;
                 }
-                int count = 0;
-                in.read(reinterpret_cast<char*>(&count), sizeof(count));
-
-                current_fractions.clear();
-                for (int i = 0; i < count; i++) {
-                    int num = 0, den = 1;
-                    in.read(reinterpret_cast<char*>(&num), sizeof(num));
-                    in.read(reinterpret_cast<char*>(&den), sizeof(den));
-                    current_fractions.push_back(Fraction(num, den));
-                }
-                cout << "Successfully loaded " << (int)current_fractions.size()
+                int count = Fraction::load_from_binary(in, current_fractions,
+                                                       current_size);
+                cout << "Successfully loaded " << count
                      << " objects from binary file.\n";
                 break;
             }
             case 7: {
-                if (current_fractions.empty()) {
+                if (current_size == 0) {
                     cout << "Array in memory is empty.\n";
                 } else {
-                    cout << "Current array of fractions:\n";
-                    int count = (int)current_fractions.size();
-                    for (int i = 0; i < count; ++i) {
+                    cout << "Current array of fractions (" << current_size
+                         << " elements):\n";
+                    for (int i = 0; i < current_size; i++) {
                         cout << "[" << i << "]: " << current_fractions[i]
                              << "\n";
                     }
                 }
+                break;
+            }
+            case 8: {
+                delete[] current_fractions;
+                current_fractions = nullptr;
+                current_size = 0;
+                cout << "Memory cleared.\n";
                 break;
             }
             case 0:
@@ -154,5 +153,6 @@ int main() {
                 break;
         }
     }
+    delete[] current_fractions;
     return 0;
 }

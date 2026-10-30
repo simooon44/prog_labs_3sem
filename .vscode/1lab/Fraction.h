@@ -1,7 +1,7 @@
 #ifndef FRACTION_H_
 #define FRACTION_H_
 #include <iostream>
-#include <vector>
+
 class Fraction {
    public:
     Fraction();
@@ -36,8 +36,13 @@ class Fraction {
     friend std::ostream& operator<<(std::ostream& os, const Fraction& fraction);
     friend std::istream& operator>>(std::istream& is, Fraction& fraction);
 
-    static bool save_to_binary(const std::vector<Fraction>& fractions,
-                               const char* filename);
+    static bool save_to_text(const Fraction* fractions, int size,
+                             std::ostream& out);
+    static bool save_to_binary(const Fraction* fractions, int size,
+                               std::ostream& out);
+
+    static int load_from_text(std::istream& in, Fraction*& arr, int& size);
+    static int load_from_binary(std::istream& in, Fraction*& arr, int& size);
 
    private:
     int numerator_;

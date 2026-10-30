@@ -45,6 +45,6 @@ clean:
 	rm -f fractions.bin
 	rm -f fractions.txt
 
-clean1:
+clean files:
 	rm -f fractions.bin
 	rm -f fractions.txt

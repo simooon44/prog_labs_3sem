@@ -5,7 +5,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <vector>
 
 using namespace std;
 
@@ -181,21 +180,65 @@ istream& operator>>(istream& is, Fraction& fraction) {
     return is;
 }
 
-bool Fraction::save_to_binary(const std::vector<Fraction>& fractions,
-                              const char* filename) {
-    ofstream out(filename, ios::binary);
+bool Fraction::save_to_text(const Fraction* fractions, int size,
+                            std::ostream& out) {
     if (!out) {
         return false;
     }
+    for (int i = 0; i < size; i++) {
+        out << fractions[i] << "\n";
+    }
+    return true;
+}
 
-    int count = (int)fractions.size();
-    out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-
-    for (const auto& f : fractions) {
-        int num = f.get_numerator();
-        int den = f.get_denominator();
+bool Fraction::save_to_binary(const Fraction* fractions, int size,
+                              std::ostream& out) {
+    if (!out) {
+        return false;
+    }
+    for (int i = 0; i < size; i++) {
+        int num = fractions[i].get_numerator();
+        int den = fractions[i].get_denominator();
         out.write(reinterpret_cast<const char*>(&num), sizeof(num));
         out.write(reinterpret_cast<const char*>(&den), sizeof(den));
     }
     return true;
+}
+
+int Fraction::load_from_text(std::istream& in, Fraction*& arr, int& size) {
+    int loaded_count = 0;
+    Fraction f;
+    while (in >> f) {
+        Fraction* new_arr = new Fraction[size + 1];
+        for (int i = 0; i < size; i++) {
+            new_arr[i] = arr[i];
+        }
+        new_arr[size] = f;
+        delete[] arr;
+        arr = new_arr;
+        size++;
+        loaded_count++;
+    }
+    return loaded_count;
+}
+
+int Fraction::load_from_binary(std::istream& in, Fraction*& arr, int& size) {
+    int loaded_count = 0;
+    int num = 0, den = 1;
+    while (in.read(reinterpret_cast<char*>(&num), sizeof(num)) &&
+           in.read(reinterpret_cast<char*>(&den), sizeof(den))) {
+        Fraction f(num, den);
+        Fraction* new_arr = new Fraction[size + 1];
+
+        for (int i = 0; i < size; i++) {
+            new_arr[i] = arr[i];
+        }
+
+        new_arr[size] = f;
+        delete[] arr;
+        arr = new_arr;
+        size++;
+        loaded_count++;
+    }
+    return loaded_count;
 }
