@@ -1,0 +1,34 @@
+#ifndef MIXED_FRACTION_H_
+#define MIXED_FRACTION_H_
+
+#include <iostream>
+
+#include "Fraction.h"
+
+class MixedFraction : public Fraction {
+   public:
+    MixedFraction();
+    MixedFraction(int num, int den = 1);
+    MixedFraction(int whole, int num, int den);
+    MixedFraction(const Fraction& f);
+    MixedFraction(const MixedFraction& other);
+    ~MixedFraction();
+
+    MixedFraction& operator=(const MixedFraction& other);
+    MixedFraction& operator=(const Fraction& other);
+
+    int get_whole_part() const;
+    int get_fractional_numerator() const;
+
+    void set_mixed(int whole, int num, int den);
+    void set_values(int num, int den);
+
+    friend std::ostream& operator<<(std::ostream& os, const MixedFraction& mf);
+    friend std::istream& operator>>(std::istream& is, MixedFraction& mf);
+
+   private:
+    int whole_part_;
+    void update_whole_part();
+};
+
+#endif  // MIXED_FRACTION_H_

@@ -1,7 +1,9 @@
 #include <fstream>
 #include <iostream>
 
+#include "EvaluatedFraction.h"
 #include "Fraction.h"
+#include "MixedFraction.h"
 
 using namespace std;
 

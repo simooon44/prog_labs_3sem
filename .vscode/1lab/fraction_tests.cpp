@@ -3,7 +3,9 @@
 #include <sstream>
 
 #include "../googletest/include/gtest/gtest.h"
+#include "EvaluatedFraction.h"
 #include "Fraction.h"
+#include "MixedFraction.h"
 
 using namespace std;
 
@@ -466,6 +468,7 @@ TEST(FractionTest3, TextFileAppend) {
     {
         Fraction arr2[2] = {Fraction(5, 6), Fraction(7, 8)};
         ofstream out(filename, ios::app);
+        int pos = out.tellp();  // put/get
         Fraction::save_to_text(arr2, 2, out);
     }
 
@@ -554,6 +557,176 @@ TEST(FractionTest3, CStrRepresentationPostIstreamUpdate) {
     Fraction f;
     ss >> f;
     EXPECT_STREQ(f.c_str(), "1/2");
+}
+
+// 4 лаба
+
+TEST(FractionTest4, EvaluatedFractionBasic) {
+    EvaluatedFraction ef(3, 4);
+    EXPECT_EQ(ef.get_numerator(), 3);
+    EXPECT_EQ(ef.get_denominator(), 4);
+    EXPECT_DOUBLE_EQ(ef.get_value(), 0.75);
+}
+
+TEST(FractionTest4, EvaluatedFractionSetValues) {
+    EvaluatedFraction ef(1, 2);
+    ef.set_values(1, 8);
+    EXPECT_EQ(ef.get_numerator(), 1);
+    EXPECT_EQ(ef.get_denominator(), 8);
+    EXPECT_DOUBLE_EQ(ef.get_value(), 0.125);
+}
+
+TEST(FractionTest4, EvaluatedFractionFromBase) {
+    Fraction f(5, 2);
+    EvaluatedFraction ef = f;
+    EXPECT_EQ(ef.get_numerator(), 5);
+    EXPECT_EQ(ef.get_denominator(), 2);
+    EXPECT_DOUBLE_EQ(ef.get_value(), 2.5);
+}
+
+TEST(FractionTest4, EvaluatedFractionCopyAndAssign) {
+    EvaluatedFraction ef1(7, 2);
+    EvaluatedFraction ef2(ef1);
+    EXPECT_DOUBLE_EQ(ef2.get_value(), 3.5);
+
+    EvaluatedFraction ef3;
+    ef3 = ef1;
+    EXPECT_DOUBLE_EQ(ef3.get_value(), 3.5);
+}
+
+TEST(FractionTest4, EvaluatedFractionStreamOutput) {
+    EvaluatedFraction ef(1, 4);
+    stringstream ss;
+    ss << ef;
+    EXPECT_EQ(ss.str(), "1/4 (= 0.25)");
+}
+
+TEST(FractionTest4, EvaluatedFractionDestructorCount) {
+    int start_count = Fraction::get_object_count();
+    {
+        EvaluatedFraction ef(3, 5);
+        EXPECT_EQ(Fraction::get_object_count(), start_count + 1);
+    }
+
+    EXPECT_EQ(Fraction::get_object_count(), start_count);
+}
+
+TEST(FractionTest4, MixedFractionThreeParams) {
+    MixedFraction mf(2, 1, 3);
+    EXPECT_EQ(mf.get_whole_part(), 2);
+    EXPECT_EQ(mf.get_fractional_numerator(), 1);
+    EXPECT_EQ(mf.get_denominator(), 3);
+    EXPECT_EQ(mf.get_numerator(), 7);
+}
+
+TEST(FractionTest4, MixedFractionTwoParamsAutoReduction) {
+    MixedFraction mf(11, 4);
+    EXPECT_EQ(mf.get_whole_part(), 2);
+    EXPECT_EQ(mf.get_fractional_numerator(), 3);
+    EXPECT_EQ(mf.get_denominator(), 4);
+    EXPECT_EQ(mf.get_numerator(), 11);
+}
+
+TEST(FractionTest4, MixedFractionFromBase) {
+    Fraction f(14, 5);
+    MixedFraction mf = f;
+    EXPECT_EQ(mf.get_whole_part(), 2);
+    EXPECT_EQ(mf.get_fractional_numerator(), 4);
+    EXPECT_EQ(mf.get_denominator(), 5);
+}
+
+TEST(FractionTest4, MixedFractionNegativeHandling) {
+    MixedFraction mf(-2, 1, 3);
+    EXPECT_EQ(mf.get_whole_part(), -2);
+    EXPECT_EQ(mf.get_fractional_numerator(), 1);
+    EXPECT_EQ(mf.get_denominator(), 3);
+    EXPECT_EQ(mf.get_numerator(), -7);
+}
+
+TEST(FractionTest4, MixedFractionCopyAndAssign) {
+    MixedFraction mf1(3, 1, 4);
+    MixedFraction mf2(mf1);
+    EXPECT_EQ(mf2.get_whole_part(), 3);
+    EXPECT_EQ(mf2.get_fractional_numerator(), 1);
+
+    MixedFraction mf3;
+    mf3 = mf1;
+    EXPECT_EQ(mf3.get_whole_part(), 3);
+    EXPECT_EQ(mf3.get_fractional_numerator(), 1);
+}
+
+TEST(FractionTest4, MixedFractionStreamOutput) {
+    MixedFraction mf(3, 2, 5);
+    stringstream ss;
+    ss << mf;
+    EXPECT_EQ(ss.str(), "3 2/5");
+
+    MixedFraction mf_proper(1, 4);
+    stringstream ss2;
+    ss2 << mf_proper;
+    EXPECT_EQ(ss2.str(), "1/4");
+}
+
+TEST(FractionTest4, MixedFractionStreamInput) {
+    stringstream ss("4 3/7");
+    MixedFraction mf;
+    ss >> mf;
+    EXPECT_EQ(mf.get_whole_part(), 4);
+    EXPECT_EQ(mf.get_fractional_numerator(), 3);
+    EXPECT_EQ(mf.get_denominator(), 7);
+
+    stringstream ss_simple("9/2");
+    MixedFraction mf_simple;
+    ss_simple >> mf_simple;
+    EXPECT_EQ(mf_simple.get_whole_part(), 4);
+    EXPECT_EQ(mf_simple.get_fractional_numerator(), 1);
+    EXPECT_EQ(mf_simple.get_denominator(), 2);
+}
+
+TEST(FractionTest4, MixedFractionDestructorCount) {
+    int start_count = Fraction::get_object_count();
+    {
+        MixedFraction mf(1, 2, 3);
+        EXPECT_EQ(Fraction::get_object_count(), start_count + 1);
+    }
+    EXPECT_EQ(Fraction::get_object_count(), start_count);
+}
+
+TEST(FractionTest4, RelatedTypesSlicingAndAssignment) {
+    EvaluatedFraction ef(7, 3);
+    MixedFraction mf(2, 1, 3);
+
+    Fraction f1 = ef;
+    EXPECT_EQ(f1.get_numerator(), 7);
+    EXPECT_EQ(f1.get_denominator(), 3);
+
+    Fraction f2 = mf;
+    EXPECT_EQ(f2.get_numerator(), 7);
+    EXPECT_EQ(f2.get_denominator(), 3);
+
+    Fraction f_assign;
+    f_assign = ef;
+    EXPECT_EQ(f_assign.get_numerator(), 7);
+
+    f_assign = mf;
+    EXPECT_EQ(f_assign.get_numerator(), 7);
+}
+
+TEST(FractionTest4, DynamicArrayWithoutVector) {
+    const int count = 3;
+
+    Fraction* arr[count];
+    arr[0] = new Fraction(1, 2);
+    arr[1] = new EvaluatedFraction(3, 4);
+    arr[2] = new MixedFraction(1, 1, 2);
+
+    EXPECT_EQ(arr[0]->get_numerator(), 1);
+    EXPECT_EQ(arr[1]->get_numerator(), 3);
+    EXPECT_EQ(arr[2]->get_numerator(), 3);
+
+    for (int i = 0; i < count; i++) {
+        delete arr[i];
+    }
 }
 
 int main(int argc, char** argv) {
