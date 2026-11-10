@@ -17,6 +17,7 @@ void print_menu() {
     cout << "6. Load from BINARY file\n";
     cout << "7. Print current array\n";
     cout << "8. Clear current array in memory\n";
+    cout << "9. 4lab check\n";
     cout << "0. Exit\n";
     cout << "Select option: ";
 }
@@ -32,6 +33,8 @@ void add_fraction(Fraction*& arr, int& size, const Fraction& f) {
     arr = new_arr;
     size++;
 }
+
+void demo_lab4();
 
 int main() {
     Fraction* current_fractions = nullptr;
@@ -147,14 +150,70 @@ int main() {
                 cout << "Memory cleared.\n";
                 break;
             }
-            case 0:
-                cout << "Exiting the program.\n";
+            case 9: {
+                demo_lab4();
                 break;
-            default:
-                cout << "Error: Unknown command!\n";
-                break;
+                case 0:
+                    cout << "Exiting the program.\n";
+                    break;
+                default:
+                    cout << "Error: Unknown command!\n";
+                    break;
+            }
         }
+        delete[] current_fractions;
+        return 0;
     }
-    delete[] current_fractions;
-    return 0;
+}
+
+void demo_lab4() {
+    EvaluatedFraction ef1(3, 4);
+    cout << "ef1: " << ef1 << "\n";
+    cout << "value: " << ef1.get_value() << "\n";
+
+    MixedFraction mf1(2, 1, 3);
+    cout << "mf1: " << mf1 << "\n";
+    cout << "whole: " << mf1.get_whole_part()
+         << ", num: " << mf1.get_fractional_numerator()
+         << ", den: " << mf1.get_denominator() << "\n";
+
+    MixedFraction mf2(11, 4);
+    cout << "mf2: " << mf2 << "\n";
+
+    Fraction sum = ef1 + Fraction(1, 4);
+    cout << "ef1 + 1/4 = " << sum << "\n";
+
+    Fraction base1 = ef1;
+    cout << "base from eval: " << base1 << "\n";
+
+    Fraction base2 = mf1;
+    cout << "base from mixed: " << base2 << "\n";
+
+    EvaluatedFraction ef2 = base2;
+    cout << "eval from base: " << ef2 << "\n";
+
+    MixedFraction mf3 = base1;
+    cout << "mixed from base: " << mf3 << "\n";
+
+    Fraction f_assign;
+    f_assign = ef1;
+    cout << "assign eval: " << f_assign << "\n";
+    f_assign = mf1;
+    cout << "assign mixed: " << f_assign << "\n";
+
+    const int size = 4;
+    Fraction* arr[size];
+    arr[0] = new Fraction(1, 2);
+    arr[1] = new EvaluatedFraction(7, 8);
+    arr[2] = new MixedFraction(3, 1, 4);
+    arr[3] = new MixedFraction(13, 5);
+
+    cout << "array:\n";
+    for (int i = 0; i < size; i++) {
+        cout << "[" << i << "]: " << *(arr[i]) << "\n";
+    }
+
+    for (int i = 0; i < size; i++) {
+        delete arr[i];
+    }
 }
