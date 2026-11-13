@@ -12,7 +12,7 @@ class MixedFraction : public Fraction {
     MixedFraction(int whole, int num, int den);
     MixedFraction(const Fraction& f);
     MixedFraction(const MixedFraction& other);
-    ~MixedFraction();
+    virtual ~MixedFraction();
 
     MixedFraction& operator=(const MixedFraction& other);
     MixedFraction& operator=(const Fraction& other);
@@ -26,9 +26,18 @@ class MixedFraction : public Fraction {
     friend std::ostream& operator<<(std::ostream& os, const MixedFraction& mf);
     friend std::istream& operator>>(std::istream& is, MixedFraction& mf);
 
+    // 5lab
+
+    virtual const char* c_str() const override;
+    virtual Fraction* clone() const override;
+    virtual void print(std::ostream& os) const override;
+
    private:
     int whole_part_;
     void update_whole_part();
+
+    char* string_rep_;
+    void update_string_representation();
 };
 
-#endif  // MIXED_FRACTION_H_
+#endif

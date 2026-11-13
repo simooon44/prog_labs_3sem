@@ -155,7 +155,7 @@ Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
 // 3lab
 
 ostream& operator<<(ostream& os, const Fraction& fraction) {
-    os << fraction.numerator_ << "/" << fraction.denominator_;
+    fraction.print(os);  // 5lab
     return os;
 }
 
@@ -242,3 +242,9 @@ int Fraction::load_from_binary(std::istream& in, Fraction*& arr, int& size) {
     }
     return loaded_count;
 }
+
+// 5lab
+
+Fraction* Fraction::clone() const { return new Fraction(*this); }
+
+void Fraction::print(std::ostream& os) const { os << c_str(); }

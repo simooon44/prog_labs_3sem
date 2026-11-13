@@ -7,7 +7,7 @@ class Fraction {
     Fraction();
     Fraction(int num, int den = 1);
     Fraction(const Fraction& other);
-    ~Fraction();
+    virtual ~Fraction();  // 5lab
 
     static int get_object_count();
 
@@ -15,7 +15,7 @@ class Fraction {
     int get_denominator() const;
     void set_values(int num, int den);
 
-    const char* c_str() const;
+    virtual const char* c_str() const;  // 5lab
 
     Fraction add(const Fraction& other) const;
     Fraction substract(const Fraction& other) const;
@@ -43,6 +43,11 @@ class Fraction {
 
     static int load_from_text(std::istream& in, Fraction*& arr, int& size);
     static int load_from_binary(std::istream& in, Fraction*& arr, int& size);
+
+    // 5 lab
+
+    virtual Fraction* clone() const;
+    virtual void print(std::ostream& os) const;
 
    private:
     int numerator_;

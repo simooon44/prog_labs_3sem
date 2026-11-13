@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Deque.h"
 #include "EvaluatedFraction.h"
 #include "Fraction.h"
 #include "MixedFraction.h"
@@ -18,6 +19,7 @@ void print_menu() {
     cout << "7. Print current array\n";
     cout << "8. Clear current array in memory\n";
     cout << "9. 4lab check\n";
+    cout << "10. 5lab check\n";
     cout << "0. Exit\n";
     cout << "Select option: ";
 }
@@ -35,6 +37,7 @@ void add_fraction(Fraction*& arr, int& size, const Fraction& f) {
 }
 
 void demo_lab4();
+void demo_lab5();
 
 int main() {
     Fraction* current_fractions = nullptr;
@@ -153,17 +156,21 @@ int main() {
             case 9: {
                 demo_lab4();
                 break;
-                case 0:
-                    cout << "Exiting the program.\n";
-                    break;
-                default:
-                    cout << "Error: Unknown command!\n";
-                    break;
             }
+            case 10: {
+                demo_lab5();
+                break;
+            }
+            case 0:
+                cout << "Exiting the program.\n";
+                break;
+            default:
+                cout << "Error: Unknown command!\n";
+                break;
         }
-        delete[] current_fractions;
-        return 0;
     }
+    delete[] current_fractions;
+    return 0;
 }
 
 void demo_lab4() {
@@ -216,4 +223,34 @@ void demo_lab4() {
     for (int i = 0; i < size; i++) {
         delete arr[i];
     }
+}
+
+void demo_lab5() {
+    Deque dq;
+
+    Fraction f(1, 2);
+    EvaluatedFraction ef(3, 4);
+    MixedFraction mf(2, 1, 3);
+
+    dq.push_back(f);
+    dq.push_back(ef);
+    dq.push_back(mf);
+
+    EvaluatedFraction ef_front(5, 8);
+    dq.push_front(ef_front);
+
+    MixedFraction mf_insert(11, 4);
+    dq.insert_at(2, mf_insert);
+
+    cout << "deque elements (polymorphism via c_str):\n";
+    dq.print_all();
+
+    int found_idx = dq.find(Fraction(3, 4));
+    cout << "find 3/4 index: " << found_idx << "\n";
+
+    dq.remove_at(2);
+    dq.pop_front();
+
+    cout << "after remove_at(2) and pop_front:\n";
+    dq.print_all();
 }

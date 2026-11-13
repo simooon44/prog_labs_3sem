@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "../googletest/include/gtest/gtest.h"
+#include "Deque.h"
 #include "EvaluatedFraction.h"
 #include "Fraction.h"
 #include "MixedFraction.h"
@@ -727,6 +728,62 @@ TEST(FractionTest4, DynamicArrayWithoutVector) {
     for (int i = 0; i < count; i++) {
         delete arr[i];
     }
+}
+
+// 5lab
+
+TEST(FractionTest5, PolymorphismViaCStrInDeque) {
+    Deque dq;
+    Fraction f(1, 2);
+    EvaluatedFraction ef(3, 4);
+    MixedFraction mf(2, 1, 3);
+
+    dq.push_back(f);
+    dq.push_back(ef);
+    dq.push_back(mf);
+
+    ASSERT_EQ(dq.get_size(), 3);
+    EXPECT_STREQ(dq.get(0)->c_str(), "1/2");
+    EXPECT_STREQ(dq.get(1)->c_str(), "3/4 (= 0.75)");
+    EXPECT_STREQ(dq.get(2)->c_str(), "2 1/3");
+}
+
+TEST(FractionTest5, DequeOperations) {
+    Deque dq;
+    dq.push_back(Fraction(1, 2));
+    dq.push_front(EvaluatedFraction(1, 4));
+    dq.insert_at(1, MixedFraction(1, 1, 2));
+
+    EXPECT_EQ(dq.get_size(), 3);
+    EXPECT_STREQ(dq.get(0)->c_str(), "1/4 (= 0.25)");
+    EXPECT_STREQ(dq.get(1)->c_str(), "1 1/2");
+    EXPECT_STREQ(dq.get(2)->c_str(), "1/2");
+
+    EXPECT_EQ(dq.find(Fraction(3, 2)), 1);
+
+    dq.remove_at(1);
+    EXPECT_EQ(dq.get_size(), 2);
+    EXPECT_STREQ(dq.get(1)->c_str(), "1/2");
+
+    dq.pop_front();
+    EXPECT_EQ(dq.get_size(), 1);
+    EXPECT_STREQ(dq.get(0)->c_str(), "1/2");
+}
+
+TEST(FractionTest5, DequeMemoryAndDeepCopy) {
+    int start_count = Fraction::get_object_count();
+    {
+        Deque dq;
+        dq.push_back(EvaluatedFraction(2, 5));
+        dq.push_back(MixedFraction(3, 1, 4));
+
+        Deque dq_copy(dq);
+        EXPECT_EQ(dq_copy.get_size(), 2);
+        EXPECT_STREQ(dq_copy.get(0)->c_str(), "2/5 (= 0.4)");
+        EXPECT_STREQ(dq_copy.get(1)->c_str(), "3 1/4");
+        EXPECT_EQ(Fraction::get_object_count(), 4);
+    }
+    EXPECT_EQ(Fraction::get_object_count(), start_count);
 }
 
 int main(int argc, char** argv) {
