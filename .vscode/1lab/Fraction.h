@@ -7,7 +7,7 @@ class Fraction {
     Fraction();
     Fraction(int num, int den = 1);
     Fraction(const Fraction& other);
-    virtual ~Fraction();  // 5lab
+    virtual ~Fraction();  // 5 lab
 
     static int get_object_count();
 
@@ -15,14 +15,14 @@ class Fraction {
     int get_denominator() const;
     void set_values(int num, int den);
 
-    virtual const char* c_str() const;  // 5lab
+    virtual const char* c_str() const;  // 5 lab
 
     Fraction add(const Fraction& other) const;
     Fraction substract(const Fraction& other) const;
     Fraction multiply(const Fraction& other) const;
     Fraction divide(const Fraction& other) const;
 
-    // 2lab
+    // 2 lab
 
     Fraction& operator=(const Fraction& other);
 
@@ -31,7 +31,7 @@ class Fraction {
     friend Fraction operator+(const Fraction& lhs, const Fraction& rhs);
     friend Fraction operator-(const Fraction& lhs, const Fraction& rhs);
 
-    // 3lab
+    // 3 lab
 
     friend std::ostream& operator<<(std::ostream& os, const Fraction& fraction);
     friend std::istream& operator>>(std::istream& is, Fraction& fraction);
@@ -47,14 +47,16 @@ class Fraction {
     // 5 lab
 
     virtual Fraction* clone() const;
-    virtual void print(std::ostream& os) const;
+
+   protected:
+    mutable char* string_rep_;
+    void update_string_representation() const;
+    void update_string_representation(const char* str) const;
 
    private:
     int numerator_;
     int denominator_;
-    char* string_rep_;
 
-    void update_string_representation();
     int gcd(int a, int b);
 
     static int object_count_;

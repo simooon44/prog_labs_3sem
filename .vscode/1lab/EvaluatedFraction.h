@@ -23,18 +23,14 @@ class EvaluatedFraction : public Fraction {
                                     const EvaluatedFraction& ef);
     friend std::istream& operator>>(std::istream& is, EvaluatedFraction& ef);
 
-    // 5lab
+    // 5 lab
 
     virtual const char* c_str() const override;
     virtual Fraction* clone() const override;
-    virtual void print(std::ostream& os) const override;
 
    private:
     double value_;
     void compute_value();
-    // 5lab
-    char* string_rep_;
-    void update_string_representation();
 };
 
 #endif

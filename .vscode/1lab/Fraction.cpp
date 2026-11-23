@@ -19,14 +19,16 @@ int Fraction::gcd(int a, int b) {
     return abs(a);
 }
 
-void Fraction::update_string_representation() {
+void Fraction::update_string_representation(const char* str) const {
     delete[] string_rep_;
+    string_rep_ = new char[strlen(str) + 1];
+    strcpy(string_rep_, str);
+}
 
+void Fraction::update_string_representation() const {
     char buffer[64];
     sprintf(buffer, "%d/%d", numerator_, denominator_);
-
-    string_rep_ = new char[strlen(buffer) + 1];
-    strcpy(string_rep_, buffer);
+    update_string_representation(buffer);
 }
 
 Fraction::Fraction() : Fraction(0, 1) {}
@@ -54,7 +56,6 @@ Fraction::Fraction(const Fraction& other)
     : numerator_(other.numerator_),
       denominator_(other.denominator_),
       string_rep_(nullptr) {
-    // можно и как обычно, но меня удивил метод
     if (other.string_rep_) {
         string_rep_ = new char[strlen(other.string_rep_) + 1];
         strcpy(string_rep_, other.string_rep_);
@@ -74,7 +75,10 @@ int Fraction::get_object_count() { return object_count_; }
 int Fraction::get_numerator() const { return numerator_; }
 int Fraction::get_denominator() const { return denominator_; }
 
-const char* Fraction::c_str() const { return string_rep_; }
+const char* Fraction::c_str() const {
+    update_string_representation();
+    return string_rep_;
+}
 
 void Fraction::set_values(int num, int den) {
     if (den == 0) return;
@@ -152,10 +156,10 @@ Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
         lhs.denominator_ * rhs.denominator_);
 }
 
-// 3lab
+// 3 lab
 
 ostream& operator<<(ostream& os, const Fraction& fraction) {
-    fraction.print(os);  // 5lab
+    os << fraction.c_str();
     return os;
 }
 
@@ -243,8 +247,6 @@ int Fraction::load_from_binary(std::istream& in, Fraction*& arr, int& size) {
     return loaded_count;
 }
 
-// 5lab
+// 5 lab
 
 Fraction* Fraction::clone() const { return new Fraction(*this); }
-
-void Fraction::print(std::ostream& os) const { os << c_str(); }

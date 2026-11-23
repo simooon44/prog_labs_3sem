@@ -1,7 +1,8 @@
 #include "EvaluatedFraction.h"
 
 #include <cstdio>
-#include <cstring>
+
+// 4 lab
 
 void EvaluatedFraction::compute_value() {
     if (get_denominator() != 0) {
@@ -9,35 +10,26 @@ void EvaluatedFraction::compute_value() {
     } else {
         value_ = 0.0;
     }
-    update_string_representation();
 }
 
-EvaluatedFraction::EvaluatedFraction()
-    : Fraction(0, 1), value_(0.0), string_rep_(nullptr) {
-    update_string_representation();
+EvaluatedFraction::EvaluatedFraction() : Fraction(0, 1), value_(0.0) {
+    compute_value();
 }
 
 EvaluatedFraction::EvaluatedFraction(int num, int den)
-    : Fraction(num, den), value_(0.0), string_rep_(nullptr) {
+    : Fraction(num, den), value_(0.0) {
     compute_value();
 }
 
 EvaluatedFraction::EvaluatedFraction(const Fraction& f)
-    : Fraction(f), value_(0.0), string_rep_(nullptr) {
+    : Fraction(f), value_(0.0) {
     compute_value();
 }
 
 EvaluatedFraction::EvaluatedFraction(const EvaluatedFraction& other)
-    : Fraction(other), value_(other.value_), string_rep_(nullptr) {
-    if (other.string_rep_) {
-        string_rep_ = new char[strlen(other.string_rep_) + 1];
-        strcpy(string_rep_, other.string_rep_);
-    } else {
-        update_string_representation();
-    }
-}
+    : Fraction(other), value_(other.value_) {}
 
-EvaluatedFraction::~EvaluatedFraction() { delete[] string_rep_; }
+EvaluatedFraction::~EvaluatedFraction() {}
 
 EvaluatedFraction& EvaluatedFraction::operator=(
     const EvaluatedFraction& other) {
@@ -46,14 +38,6 @@ EvaluatedFraction& EvaluatedFraction::operator=(
     }
     Fraction::operator=(other);
     value_ = other.value_;
-
-    delete[] string_rep_;
-    if (other.string_rep_) {
-        string_rep_ = new char[strlen(other.string_rep_) + 1];
-        strcpy(string_rep_, other.string_rep_);
-    } else {
-        update_string_representation();
-    }
     return *this;
 }
 
@@ -71,7 +55,7 @@ void EvaluatedFraction::set_values(int num, int den) {
 }
 
 std::ostream& operator<<(std::ostream& os, const EvaluatedFraction& ef) {
-    ef.print(os);
+    os << ef.c_str();
     return os;
 }
 
@@ -83,20 +67,15 @@ std::istream& operator>>(std::istream& is, EvaluatedFraction& ef) {
     return is;
 }
 
-// 5lab
+// 5 lab
 
-void EvaluatedFraction::update_string_representation() {
-    delete[] string_rep_;
+const char* EvaluatedFraction::c_str() const {
     char buffer[64];
     sprintf(buffer, "%d/%d (= %g)", get_numerator(), get_denominator(), value_);
-    string_rep_ = new char[strlen(buffer) + 1];
-    strcpy(string_rep_, buffer);
+    update_string_representation(buffer);
+    return string_rep_;
 }
-
-const char* EvaluatedFraction::c_str() const { return string_rep_; }
 
 Fraction* EvaluatedFraction::clone() const {
     return new EvaluatedFraction(*this);
 }
-
-void EvaluatedFraction::print(std::ostream& os) const { os << string_rep_; }

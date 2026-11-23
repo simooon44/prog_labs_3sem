@@ -14,7 +14,6 @@ class Deque {
 
     void push_front(const Fraction& obj);
     void push_back(const Fraction& obj);
-
     bool pop_front();
 
     bool insert_at(int index, const Fraction& obj);
