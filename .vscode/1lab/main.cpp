@@ -1,8 +1,11 @@
 #include <fstream>
 #include <iostream>
+#include <new>
+#include <sstream>
 
 #include "Deque.h"
 #include "EvaluatedFraction.h"
+#include "Exceptions.h"
 #include "Fraction.h"
 #include "MixedFraction.h"
 
@@ -20,6 +23,7 @@ void print_menu() {
     cout << "8. Clear current array in memory\n";
     cout << "9. 4lab check\n";
     cout << "10. 5lab check\n";
+    cout << "11. 6lab check\n";
     cout << "0. Exit\n";
     cout << "Select option: ";
 }
@@ -38,6 +42,7 @@ void add_fraction(Fraction*& arr, int& size, const Fraction& f) {
 
 void demo_lab4();
 void demo_lab5();
+void demo_lab6();
 
 int main() {
     Fraction* current_fractions = nullptr;
@@ -52,121 +57,128 @@ int main() {
             continue;
         }
 
-        switch (choice) {
-            case 1: {
-                Fraction f;
-                cout << "Enter a fraction (format 3/4 or 4): ";
-                cin >> f;
-                if (cin) {
-                    cout << "You entered: " << f << "\n";
-                } else {
-                    cout << "Error!\n";
-                    cin.clear();
-                    cin.ignore(10000, '\n');
-                }
-                break;
-            }
-            case 2: {
-                int count;
-                cout << "How many fractions do you want to add? ";
-                cin >> count;
-                for (int i = 0; i < count; i++) {
+        try {
+            switch (choice) {
+                case 1: {
                     Fraction f;
-                    cout << "Fraction #" << i + 1 << ": ";
+                    cout << "Enter a fraction (format 3/4 or 4): ";
                     cin >> f;
-                    add_fraction(current_fractions, current_size, f);
-                }
-                cout << "Array of " << count
-                     << " elements successfully created.\n";
-                break;
-            }
-            case 3: {
-                if (current_size == 0) {
-                    cout << "Array is empty. Nothing to save.\n";
+                    cout << "You entered: " << f << "\n";
                     break;
                 }
-                ofstream out("fractions.txt", ios::app);
-                if (Fraction::save_to_text(current_fractions, current_size,
-                                           out)) {
-                    cout << "Successfully appended\n";
-                } else {
-                    cout << "Error!\n";
-                }
-                break;
-            }
-            case 4: {
-                ifstream in("fractions.txt");
-                if (!in) {
-                    cout << "Error opening text file!\n";
-                    break;
-                }
-                int count = Fraction::load_from_text(in, current_fractions,
-                                                     current_size);
-                cout << "Successfully loaded " << count
-                     << " objects from text file.\n";
-                break;
-            }
-            case 5: {
-                if (current_size == 0) {
-                    cout << "Array is empty. Nothing to save.\n";
-                    break;
-                }
-
-                ofstream out("fractions.bin", ios::app | ios::binary);
-                if (Fraction::save_to_binary(current_fractions, current_size,
-                                             out)) {
-                    cout << "Successfully saved to binary file fractions.bin\n";
-                } else {
-                    cout << "Error!\n";
-                }
-                break;
-            }
-            case 6: {
-                ifstream in("fractions.bin", ios::binary);
-                if (!in) {
-                    cout << "Error opening binary file!\n";
-                    break;
-                }
-                int count = Fraction::load_from_binary(in, current_fractions,
-                                                       current_size);
-                cout << "Successfully loaded " << count
-                     << " objects from binary file.\n";
-                break;
-            }
-            case 7: {
-                if (current_size == 0) {
-                    cout << "Array in memory is empty.\n";
-                } else {
-                    cout << "Current array of fractions (" << current_size
-                         << " elements):\n";
-                    for (int i = 0; i < current_size; i++) {
-                        cout << "[" << i << "]: " << current_fractions[i]
-                             << "\n";
+                case 2: {
+                    int count;
+                    cout << "How many fractions do you want to add? ";
+                    if (!(cin >> count) || count < 0) {
+                        throw InputFormatException("Invalid array size");
                     }
+                    for (int i = 0; i < count; i++) {
+                        Fraction f;
+                        cout << "Fraction #" << i + 1 << ": ";
+                        cin >> f;
+                        add_fraction(current_fractions, current_size, f);
+                    }
+                    cout << "Array of " << count
+                         << " elements successfully created.\n";
+                    break;
                 }
-                break;
+                case 3: {
+                    if (current_size == 0) {
+                        cout << "Array is empty. Nothing to save.\n";
+                        break;
+                    }
+                    ofstream out("fractions.txt", ios::app);
+                    Fraction::save_to_text(current_fractions, current_size,
+                                           out);
+                    cout << "Successfully appended\n";
+                    break;
+                }
+                case 4: {
+                    ifstream in("fractions.txt");
+                    int count = Fraction::load_from_text(in, current_fractions,
+                                                         current_size);
+                    cout << "Successfully loaded " << count
+                         << " objects from text file.\n";
+                    break;
+                }
+                case 5: {
+                    if (current_size == 0) {
+                        cout << "Array is empty. Nothing to save.\n";
+                        break;
+                    }
+                    ofstream out("fractions.bin", ios::app | ios::binary);
+                    Fraction::save_to_binary(current_fractions, current_size,
+                                             out);
+                    cout << "Successfully saved to binary file fractions.bin\n";
+                    break;
+                }
+                case 6: {
+                    ifstream in("fractions.bin", ios::binary);
+                    int count = Fraction::load_from_binary(
+                        in, current_fractions, current_size);
+                    cout << "Successfully loaded " << count
+                         << " objects from binary file.\n";
+                    break;
+                }
+                case 7: {
+                    if (current_size == 0) {
+                        cout << "Array in memory is empty.\n";
+                    } else {
+                        cout << "Current array of fractions (" << current_size
+                             << " elements):\n";
+                        for (int i = 0; i < current_size; i++) {
+                            cout << "[" << i << "]: " << current_fractions[i]
+                                 << "\n";
+                        }
+                    }
+                    break;
+                }
+                case 8: {
+                    delete[] current_fractions;
+                    current_fractions = nullptr;
+                    current_size = 0;
+                    cout << "Memory cleared.\n";
+                    break;
+                }
+                case 9: {
+                    demo_lab4();
+                    break;
+                }
+                case 10: {
+                    demo_lab5();
+                    break;
+                }
+                case 11: {
+                    demo_lab6();
+                    break;
+                }
+                case 0:
+                    cout << "Exiting the program.\n";
+                    break;
+                default:
+                    cout << "Error: Unknown command!\n";
+                    break;
             }
-            case 8: {
-                delete[] current_fractions;
-                current_fractions = nullptr;
-                current_size = 0;
-                cout << "Memory cleared.\n";
-                break;
-            }
-            case 9: {
-                demo_lab4();
-                break;
-            }
-            case 10: {
-                demo_lab5();
-                break;
-            }
-            case 0:
-                cout << "Exiting the program.\n";
-                break;
-            default:
-                cout << "Error: Unknown command!\n";
-                break;
+        } catch (const DivisionByZeroException& e) {
+            cout << "[DivisionByZeroException]: " << e.what() << "\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        } catch (const OutOfRangeException& e) {
+            cout << "[OutOfRangeException]: " << e.what() << "\n";
+        } catch (const FileIOException& e) {
+            cout << "[FileIOException]: " << e.what() << "\n";
+        } catch (const InputFormatException& e) {
+            cout << "[InputFormatException]: " << e.what() << "\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        } catch (const AppException& e) {
+            cout << "[AppException]: " << e.what() << "\n";
+        } catch (const std::bad_alloc& e) {
+            cout << "[std::bad_alloc]: " << e.what() << "\n";
+        } catch (const std::exception& e) {
+            cout << "[std::exception]: " << e.what() << "\n";
+        } catch (...) {
+            cout << "[Unknown Exception]\n";
         }
     }
     delete[] current_fractions;
@@ -253,4 +265,93 @@ void demo_lab5() {
 
     cout << "after remove_at(2) and pop_front:\n";
     dq.print_all();
+}
+
+void demo_lab6() {
+    try {
+        cout << "1) Creating Fraction(5, 0)...\n";
+        Fraction bad(5, 0);
+    } catch (const DivisionByZeroException& e) {
+        cout << "   Caught DivisionByZeroException: " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "2) Dividing 1/2 by 0/1...\n";
+        Fraction f1(1, 2);
+        Fraction f2(0, 1);
+        Fraction res = f1.divide(f2);
+    } catch (const DivisionByZeroException& e) {
+        cout << "   Caught DivisionByZeroException: " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "3) Accessing Deque::get(10)...\n";
+        Deque dq;
+        dq.push_back(Fraction(1, 3));
+        cout << dq.get(10)->c_str() << "\n";
+    } catch (const OutOfRangeException& e) {
+        cout << "   Caught OutOfRangeException: " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "4) Calling pop_front() on empty Deque...\n";
+        Deque empty_dq;
+        empty_dq.pop_front();
+    } catch (const OutOfRangeException& e) {
+        cout << "   Caught OutOfRangeException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "5) Loading from nonexistent file...\n";
+        ifstream bad_file("nonexistent_file_12345.txt");
+        Fraction* arr = nullptr;
+        int sz = 0;
+        Fraction::load_from_text(bad_file, arr, sz);
+    } catch (const FileIOException& e) {
+        cout << "   Caught FileIOException: " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "6) Parsing invalid stream \"abc\"...\n";
+        stringstream ss("abc");
+        Fraction f;
+        ss >> f;
+    } catch (const InputFormatException& e) {
+        cout << "   Caught InputFormatException: " << e.what() << "\n";
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
+
+    try {
+        cout << "7) Simulating std::bad_alloc...\n";
+        throw std::bad_alloc();
+    } catch (const AppException& e) {
+        cout << "   Caught AppException: " << e.what() << "\n";
+    } catch (const std::bad_alloc& e) {
+        cout << "   Caught std::bad_alloc: " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        cout << "   Caught std::exception: " << e.what() << "\n";
+    } catch (...) {
+        cout << "   Caught unknown exception\n";
+    }
 }

@@ -2,6 +2,8 @@
 #define FRACTION_H_
 #include <iostream>
 
+#include "Exceptions.h"
+
 class Fraction {
    public:
     Fraction();

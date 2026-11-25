@@ -5,11 +5,11 @@
 // 4 lab
 
 void EvaluatedFraction::compute_value() {
-    if (get_denominator() != 0) {
-        value_ = static_cast<double>(get_numerator()) / get_denominator();
-    } else {
-        value_ = 0.0;
+    if (get_denominator() == 0) {
+        throw DivisionByZeroException(
+            "EvaluatedFraction::compute_value: denominator is zero");
     }
+    value_ = static_cast<double>(get_numerator()) / get_denominator();
 }
 
 EvaluatedFraction::EvaluatedFraction() : Fraction(0, 1), value_(0.0) {
@@ -55,6 +55,10 @@ void EvaluatedFraction::set_values(int num, int den) {
 }
 
 std::ostream& operator<<(std::ostream& os, const EvaluatedFraction& ef) {
+    if (!os) {
+        throw FileIOException(
+            "EvaluatedFraction operator<<: output stream error");
+    }
     os << ef.c_str();
     return os;
 }

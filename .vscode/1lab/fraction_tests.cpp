@@ -1,10 +1,12 @@
 #include <cstring>
 #include <fstream>
+#include <new>
 #include <sstream>
 
 #include "../googletest/include/gtest/gtest.h"
 #include "Deque.h"
 #include "EvaluatedFraction.h"
+#include "Exceptions.h"
 #include "Fraction.h"
 #include "MixedFraction.h"
 
@@ -99,11 +101,13 @@ TEST(FractionTest, ZeroNumeratorConstructor) {
     EXPECT_STREQ(f.c_str(), "0/1");
 }
 
+/*
 TEST(FractionTest, ZeroDenominatorHandling) {
     Fraction f(3, 0);
     EXPECT_EQ(f.get_denominator(), 1);
     EXPECT_STREQ(f.c_str(), "3/1");
 }
+*/
 
 TEST(FractionTest, additionWithNegative) {
     Fraction f1(3, 4);
@@ -133,11 +137,13 @@ TEST(FractionTest, CopyConstructorValues) {
     EXPECT_STREQ(copy.c_str(), "3/7");
 }
 
+/*
 TEST(FractionTest, SetterZeroDenominatorProtection) {
     Fraction f(2, 3);
     f.set_values(5, 0);
     EXPECT_NE(f.get_denominator(), 0);
 }
+*/
 
 // 2 лаба
 
@@ -538,6 +544,7 @@ TEST(FractionTest3, ObjectCounterConsistencyInIO) {
     EXPECT_EQ(Fraction::get_object_count(), initial);
 }
 
+/*
 TEST(FractionTest3, InvalidInputStreamStateStateIntact) {
     stringstream ss("not_a_fraction");
     Fraction f(2, 3);
@@ -552,6 +559,7 @@ TEST(FractionTest3, IstreamInputZeroDenominatorHandling) {
     ss >> f;
     EXPECT_NE(f.get_denominator(), 0);
 }
+*/
 
 TEST(FractionTest3, CStrRepresentationPostIstreamUpdate) {
     stringstream ss("7/14");
@@ -784,6 +792,101 @@ TEST(FractionTest5, DequeMemoryAndDeepCopy) {
         EXPECT_EQ(Fraction::get_object_count(), 4);
     }
     EXPECT_EQ(Fraction::get_object_count(), start_count);
+}
+
+// 6 lab
+
+TEST(FractionTest6, DivisionByZeroThrows) {
+    EXPECT_THROW(Fraction(3, 0), DivisionByZeroException);
+    EXPECT_THROW(EvaluatedFraction(3, 0), DivisionByZeroException);
+    EXPECT_THROW(MixedFraction(1, 2, 0), DivisionByZeroException);
+
+    Fraction f(1, 2);
+    EXPECT_THROW(f.set_values(5, 0), DivisionByZeroException);
+    EXPECT_THROW(f.divide(Fraction(0, 1)), DivisionByZeroException);
+}
+
+TEST(FractionTest6, DequeOutOfRangeThrows) {
+    Deque dq;
+    EXPECT_THROW(dq.pop_front(), OutOfRangeException);
+    EXPECT_THROW(dq.get(0), OutOfRangeException);
+    EXPECT_THROW(dq.remove_at(0), OutOfRangeException);
+
+    dq.push_back(Fraction(1, 2));
+    EXPECT_THROW(dq.get(-1), OutOfRangeException);
+    EXPECT_THROW(dq.get(1), OutOfRangeException);
+    EXPECT_THROW(dq.insert_at(-1, Fraction(1, 3)), OutOfRangeException);
+    EXPECT_THROW(dq.insert_at(2, Fraction(1, 3)), OutOfRangeException);
+    EXPECT_THROW(dq.remove_at(1), OutOfRangeException);
+}
+
+TEST(FractionTest6, StreamAndFileExceptions) {
+    stringstream bad_str("not_a_fraction");
+    Fraction f;
+    EXPECT_THROW(bad_str >> f, InputFormatException);
+
+    stringstream zero_den_str("5/0");
+    EXPECT_THROW(zero_den_str >> f, DivisionByZeroException);
+
+    stringstream bad_mixed("4 3/abc");
+    MixedFraction mf;
+    EXPECT_THROW(bad_mixed >> mf, InputFormatException);
+
+    ifstream closed_in("no_such_file_xyz.txt");
+    Fraction* arr = nullptr;
+    int size = 0;
+    EXPECT_THROW(Fraction::load_from_text(closed_in, arr, size),
+                 FileIOException);
+}
+
+TEST(FractionTest6, ManualTryCatchHierarchy) {
+    int initial_count = Fraction::get_object_count();
+    int caught_handler = 0;
+
+    try {
+        Fraction valid_local(2, 3);
+        EXPECT_EQ(Fraction::get_object_count(), initial_count + 1);
+
+        MixedFraction invalid_mixed(1, 5, 0);
+    } catch (const DivisionByZeroException& e) {
+        caught_handler = 1;
+        EXPECT_NE(std::strlen(e.what()), 0u);
+    } catch (const AppException&) {
+        caught_handler = 2;
+    } catch (const std::exception&) {
+        caught_handler = 3;
+    } catch (...) {
+        caught_handler = 4;
+    }
+
+    EXPECT_EQ(caught_handler, 1);
+    EXPECT_EQ(Fraction::get_object_count(), initial_count);
+
+    int base_caught = 0;
+    try {
+        Deque dq;
+        dq.get(5);
+    } catch (const DivisionByZeroException&) {
+        base_caught = 1;
+    } catch (const AppException& e) {
+        base_caught = 2;
+        EXPECT_STREQ(e.what(), "Deque::get: index out of range");
+    } catch (...) {
+        base_caught = 3;
+    }
+    EXPECT_EQ(base_caught, 2);
+
+    int ellipsis_caught = 0;
+    try {
+        throw 42;
+    } catch (const AppException&) {
+        ellipsis_caught = 1;
+    } catch (const std::exception&) {
+        ellipsis_caught = 2;
+    } catch (...) {
+        ellipsis_caught = 3;
+    }
+    EXPECT_EQ(ellipsis_caught, 3);
 }
 
 int main(int argc, char** argv) {

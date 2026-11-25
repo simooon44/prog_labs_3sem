@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "Exceptions.h"
 #include "Fraction.h"
 
 class Deque {
@@ -36,7 +37,6 @@ class Deque {
         Node(const Fraction& obj, Node* n = nullptr);
         ~Node();
     };
-
     Node* head_;
     Node* tail_;
     int size_;

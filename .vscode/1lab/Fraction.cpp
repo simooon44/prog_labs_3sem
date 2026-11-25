@@ -36,7 +36,7 @@ Fraction::Fraction() : Fraction(0, 1) {}
 Fraction::Fraction(int num, int den)
     : numerator_(num), denominator_(den), string_rep_(nullptr) {
     if (denominator_ == 0) {
-        denominator_ = 1;
+        throw DivisionByZeroException("Fraction: denominator cannot be zero");
     }
 
     int common_div = gcd(numerator_, denominator_);
@@ -81,7 +81,10 @@ const char* Fraction::c_str() const {
 }
 
 void Fraction::set_values(int num, int den) {
-    if (den == 0) return;
+    if (den == 0) {
+        throw DivisionByZeroException(
+            "Fraction::set_values: denominator cannot be zero");
+    }
     numerator_ = num;
     denominator_ = den;
 
@@ -115,7 +118,9 @@ Fraction Fraction::multiply(const Fraction& other) const {
 }
 
 Fraction Fraction::divide(const Fraction& other) const {
-    if (other.numerator_ == 0) return Fraction(0, 1);
+    if (other.numerator_ == 0) {
+        throw DivisionByZeroException("Fraction::divide: division by zero");
+    }
     return Fraction(numerator_ * other.denominator_,
                     denominator_ * other.numerator_);
 }
@@ -127,16 +132,16 @@ Fraction& Fraction::operator=(const Fraction& other) {
         return *this;
     }
 
-    numerator_ = other.numerator_;
-    denominator_ = other.denominator_;
+    char* new_rep = nullptr;
+    if (other.string_rep_) {
+        new_rep = new char[strlen(other.string_rep_) + 1];
+        strcpy(new_rep, other.string_rep_);
+    }
 
     delete[] string_rep_;
-    if (other.string_rep_) {
-        string_rep_ = new char[strlen(other.string_rep_) + 1];
-        strcpy(string_rep_, other.string_rep_);
-    } else {
-        string_rep_ = nullptr;
-    }
+    string_rep_ = new_rep;
+    numerator_ = other.numerator_;
+    denominator_ = other.denominator_;
 
     return *this;
 }
@@ -159,6 +164,9 @@ Fraction operator-(const Fraction& lhs, const Fraction& rhs) {
 // 3 lab
 
 ostream& operator<<(ostream& os, const Fraction& fraction) {
+    if (!os) {
+        throw FileIOException("operator<<: output stream is in invalid state");
+    }
     os << fraction.c_str();
     return os;
 }
@@ -167,17 +175,26 @@ istream& operator>>(istream& is, Fraction& fraction) {
     int num = 0;
     int den = 1;
 
-    if (!(is >> num)) {
+    is >> std::ws;
+    if (is.peek() == EOF) {
+        is.setstate(std::ios::eofbit | std::ios::failbit);
         return is;
     }
 
-    while (is.peek() == ' ' || is.peek() == '\t') {
+    if (!(is >> num)) {
+        throw InputFormatException("Fraction input: expected numerator");
+    }
+
+    while (is.peek() == ' ' || is.peek() == '	') {
         is.get();
     }
 
     if (is.peek() == '/') {
         is.get();
-        is >> den;
+        if (!(is >> den)) {
+            throw InputFormatException(
+                "Fraction input: expected denominator after '/'");
+        }
     }
 
     fraction.set_values(num, den);
@@ -187,10 +204,13 @@ istream& operator>>(istream& is, Fraction& fraction) {
 bool Fraction::save_to_text(const Fraction* fractions, int size,
                             std::ostream& out) {
     if (!out) {
-        return false;
+        throw FileIOException("save_to_text: output stream is not open or bad");
     }
     for (int i = 0; i < size; i++) {
         out << fractions[i] << "\n";
+        if (!out) {
+            throw FileIOException("save_to_text: write error");
+        }
     }
     return true;
 }
@@ -198,18 +218,26 @@ bool Fraction::save_to_text(const Fraction* fractions, int size,
 bool Fraction::save_to_binary(const Fraction* fractions, int size,
                               std::ostream& out) {
     if (!out) {
-        return false;
+        throw FileIOException(
+            "save_to_binary: output stream is not open or bad");
     }
     for (int i = 0; i < size; i++) {
         int num = fractions[i].get_numerator();
         int den = fractions[i].get_denominator();
         out.write(reinterpret_cast<const char*>(&num), sizeof(num));
         out.write(reinterpret_cast<const char*>(&den), sizeof(den));
+        if (!out) {
+            throw FileIOException("save_to_binary: write error");
+        }
     }
     return true;
 }
 
 int Fraction::load_from_text(std::istream& in, Fraction*& arr, int& size) {
+    if (!in) {
+        throw FileIOException(
+            "load_from_text: input stream is not open or bad");
+    }
     int loaded_count = 0;
     Fraction f;
     while (in >> f) {
@@ -227,10 +255,17 @@ int Fraction::load_from_text(std::istream& in, Fraction*& arr, int& size) {
 }
 
 int Fraction::load_from_binary(std::istream& in, Fraction*& arr, int& size) {
+    if (!in) {
+        throw FileIOException(
+            "load_from_binary: input stream is not open or bad");
+    }
     int loaded_count = 0;
     int num = 0, den = 1;
-    while (in.read(reinterpret_cast<char*>(&num), sizeof(num)) &&
-           in.read(reinterpret_cast<char*>(&den), sizeof(den))) {
+    while (in.read(reinterpret_cast<char*>(&num), sizeof(num))) {
+        if (!in.read(reinterpret_cast<char*>(&den), sizeof(den))) {
+            throw FileIOException(
+                "load_from_binary: unexpected end of file (corrupted record)");
+        }
         Fraction f(num, den);
         Fraction* new_arr = new Fraction[size + 1];
 

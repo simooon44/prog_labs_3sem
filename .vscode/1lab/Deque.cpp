@@ -7,10 +7,15 @@ Deque::Node::~Node() { delete data; }
 Deque::Deque() : head_(nullptr), tail_(nullptr), size_(0) {}
 
 Deque::Deque(const Deque& other) : head_(nullptr), tail_(nullptr), size_(0) {
-    Node* curr = other.head_;
-    while (curr != nullptr) {
-        push_back(*(curr->data));
-        curr = curr->next;
+    try {
+        Node* curr = other.head_;
+        while (curr != nullptr) {
+            push_back(*(curr->data));
+            curr = curr->next;
+        }
+    } catch (...) {
+        clear();
+        throw;
     }
 }
 
@@ -20,12 +25,18 @@ Deque& Deque::operator=(const Deque& other) {
     if (this == &other) {
         return *this;
     }
-    clear();
-    Node* curr = other.head_;
-    while (curr != nullptr) {
-        push_back(*(curr->data));
-        curr = curr->next;
-    }
+    Deque temp(other);
+    Node* old_head = head_;
+    Node* old_tail = tail_;
+    int old_size = size_;
+
+    head_ = temp.head_;
+    tail_ = temp.tail_;
+    size_ = temp.size_;
+
+    temp.head_ = old_head;
+    temp.tail_ = old_tail;
+    temp.size_ = old_size;
     return *this;
 }
 
@@ -51,7 +62,7 @@ void Deque::push_back(const Fraction& obj) {
 
 bool Deque::pop_front() {
     if (head_ == nullptr) {
-        return false;
+        throw OutOfRangeException("Deque::pop_front: deque is empty");
     }
     Node* temp = head_;
     head_ = head_->next;
@@ -65,7 +76,7 @@ bool Deque::pop_front() {
 
 bool Deque::insert_at(int index, const Fraction& obj) {
     if (index < 0 || index > size_) {
-        return false;
+        throw OutOfRangeException("Deque::insert_at: index out of range");
     }
     if (index == 0) {
         push_front(obj);
@@ -88,7 +99,7 @@ bool Deque::insert_at(int index, const Fraction& obj) {
 
 bool Deque::remove_at(int index) {
     if (index < 0 || index >= size_) {
-        return false;
+        throw OutOfRangeException("Deque::remove_at: index out of range");
     }
     if (index == 0) {
         return pop_front();
@@ -124,7 +135,7 @@ int Deque::find(const Fraction& target) const {
 
 const Fraction* Deque::get(int index) const {
     if (index < 0 || index >= size_) {
-        return nullptr;
+        throw OutOfRangeException("Deque::get: index out of range");
     }
     Node* curr = head_;
     for (int i = 0; i < index; i++) {
@@ -148,6 +159,7 @@ int Deque::get_size() const { return size_; }
 bool Deque::is_empty() const { return size_ == 0; }
 
 void Deque::clear() {
-    while (pop_front()) {
+    while (!is_empty()) {
+        pop_front();
     }
 }

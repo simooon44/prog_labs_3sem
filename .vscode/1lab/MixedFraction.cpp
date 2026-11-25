@@ -58,7 +58,8 @@ int MixedFraction::get_fractional_numerator() const {
 
 void MixedFraction::set_mixed(int whole, int num, int den) {
     if (den == 0) {
-        den = 1;
+        throw DivisionByZeroException(
+            "MixedFraction::set_mixed: denominator cannot be zero");
     }
     if (den < 0) {
         num = -num;
@@ -83,14 +84,25 @@ void MixedFraction::set_values(int num, int den) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MixedFraction& mf) {
+    if (!os) {
+        throw FileIOException("MixedFraction operator<<: output stream error");
+    }
     os << mf.c_str();
     return os;
 }
 
 std::istream& operator>>(std::istream& is, MixedFraction& mf) {
     int part1 = 0;
-    if (!(is >> part1)) {
+
+    is >> std::ws;
+    if (is.peek() == EOF) {
+        is.setstate(std::ios::eofbit | std::ios::failbit);
         return is;
+    }
+
+    if (!(is >> part1)) {
+        throw InputFormatException(
+            "MixedFraction input: expected integer or numerator");
     }
 
     while (is.peek() == ' ' || is.peek() == '\t') {
@@ -100,19 +112,28 @@ std::istream& operator>>(std::istream& is, MixedFraction& mf) {
     if (is.peek() == '/') {
         is.get();
         int den = 1;
-        is >> den;
+        if (!(is >> den)) {
+            throw InputFormatException(
+                "MixedFraction input: expected denominator after '/'");
+        }
         mf.set_values(part1, den);
     } else if ((is.peek() >= '0' && is.peek() <= '9') || is.peek() == '+' ||
                is.peek() == '-') {
         int num = 0;
-        is >> num;
+        if (!(is >> num)) {
+            throw InputFormatException(
+                "MixedFraction input: expected fractional numerator");
+        }
         while (is.peek() == ' ' || is.peek() == '\t') {
             is.get();
         }
         if (is.peek() == '/') {
             is.get();
             int den = 1;
-            is >> den;
+            if (!(is >> den)) {
+                throw InputFormatException(
+                    "MixedFraction input: expected denominator after '/'");
+            }
             mf.set_mixed(part1, num, den);
         } else {
             mf.set_mixed(part1, num, 1);
