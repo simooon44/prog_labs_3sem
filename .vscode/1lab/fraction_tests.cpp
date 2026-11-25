@@ -741,10 +741,10 @@ TEST(FractionTest4, DynamicArrayWithoutVector) {
 // 5lab
 
 TEST(FractionTest5, PolymorphismViaCStrInDeque) {
-    Deque dq;
-    Fraction f(1, 2);
-    EvaluatedFraction ef(3, 4);
-    MixedFraction mf(2, 1, 3);
+    Deque<Fraction*> dq;
+    Fraction* f = new Fraction(1, 2);
+    Fraction* ef = new EvaluatedFraction(3, 4);
+    Fraction* mf = new MixedFraction(2, 1, 3);
 
     dq.push_back(f);
     dq.push_back(ef);
@@ -754,42 +754,46 @@ TEST(FractionTest5, PolymorphismViaCStrInDeque) {
     EXPECT_STREQ(dq.get(0)->c_str(), "1/2");
     EXPECT_STREQ(dq.get(1)->c_str(), "3/4 (= 0.75)");
     EXPECT_STREQ(dq.get(2)->c_str(), "2 1/3");
+
+    for (int i = 0; i < dq.get_size(); i++) {
+        delete dq.get(i);
+    }
 }
 
 TEST(FractionTest5, DequeOperations) {
-    Deque dq;
+    Deque<Fraction> dq;
     dq.push_back(Fraction(1, 2));
-    dq.push_front(EvaluatedFraction(1, 4));
-    dq.insert_at(1, MixedFraction(1, 1, 2));
+    dq.push_front(Fraction(1, 4));
+    dq.insert_at(1, Fraction(3, 2));
 
     EXPECT_EQ(dq.get_size(), 3);
-    EXPECT_STREQ(dq.get(0)->c_str(), "1/4 (= 0.25)");
-    EXPECT_STREQ(dq.get(1)->c_str(), "1 1/2");
-    EXPECT_STREQ(dq.get(2)->c_str(), "1/2");
+    EXPECT_STREQ(dq.get(0).c_str(), "1/4");
+    EXPECT_STREQ(dq.get(1).c_str(), "3/2");
+    EXPECT_STREQ(dq.get(2).c_str(), "1/2");
 
     EXPECT_EQ(dq.find(Fraction(3, 2)), 1);
 
     dq.remove_at(1);
     EXPECT_EQ(dq.get_size(), 2);
-    EXPECT_STREQ(dq.get(1)->c_str(), "1/2");
+    EXPECT_STREQ(dq.get(1).c_str(), "1/2");
 
     dq.pop_front();
     EXPECT_EQ(dq.get_size(), 1);
-    EXPECT_STREQ(dq.get(0)->c_str(), "1/2");
+    EXPECT_STREQ(dq.get(0).c_str(), "1/2");
 }
 
 TEST(FractionTest5, DequeMemoryAndDeepCopy) {
     int start_count = Fraction::get_object_count();
     {
-        Deque dq;
-        dq.push_back(EvaluatedFraction(2, 5));
-        dq.push_back(MixedFraction(3, 1, 4));
+        Deque<Fraction> dq;
+        dq.push_back(Fraction(2, 5));
+        dq.push_back(Fraction(13, 4));
 
-        Deque dq_copy(dq);
+        Deque<Fraction> dq_copy(dq);
         EXPECT_EQ(dq_copy.get_size(), 2);
-        EXPECT_STREQ(dq_copy.get(0)->c_str(), "2/5 (= 0.4)");
-        EXPECT_STREQ(dq_copy.get(1)->c_str(), "3 1/4");
-        EXPECT_EQ(Fraction::get_object_count(), 4);
+        EXPECT_STREQ(dq_copy.get(0).c_str(), "2/5");
+        EXPECT_STREQ(dq_copy.get(1).c_str(), "13/4");
+        EXPECT_EQ(Fraction::get_object_count(), start_count + 4);
     }
     EXPECT_EQ(Fraction::get_object_count(), start_count);
 }
@@ -807,7 +811,7 @@ TEST(FractionTest6, DivisionByZeroThrows) {
 }
 
 TEST(FractionTest6, DequeOutOfRangeThrows) {
-    Deque dq;
+    Deque<Fraction> dq;
     EXPECT_THROW(dq.pop_front(), OutOfRangeException);
     EXPECT_THROW(dq.get(0), OutOfRangeException);
     EXPECT_THROW(dq.remove_at(0), OutOfRangeException);
@@ -839,7 +843,7 @@ TEST(FractionTest6, StreamAndFileExceptions) {
                  FileIOException);
 }
 
-TEST(FractionTest6, ManualTryCatchHierarchy) {
+TEST(FractionTest6, ManualTryCatchHierarchyAndStackUnwinding) {
     int initial_count = Fraction::get_object_count();
     int caught_handler = 0;
 
@@ -864,7 +868,7 @@ TEST(FractionTest6, ManualTryCatchHierarchy) {
 
     int base_caught = 0;
     try {
-        Deque dq;
+        Deque<Fraction> dq;
         dq.get(5);
     } catch (const DivisionByZeroException&) {
         base_caught = 1;
@@ -887,6 +891,92 @@ TEST(FractionTest6, ManualTryCatchHierarchy) {
         ellipsis_caught = 3;
     }
     EXPECT_EQ(ellipsis_caught, 3);
+}
+
+// 7 lab
+
+TEST(FractionTest7, DequeIntOperations) {
+    Deque<int> dq;
+    EXPECT_TRUE(dq.is_empty());
+
+    dq.push_back(10);
+    dq.push_back(30);
+    dq.push_front(5);
+    dq.insert_at(2, 20);
+
+    ASSERT_EQ(dq.get_size(), 4);
+    EXPECT_EQ(dq.get(0), 5);
+    EXPECT_EQ(dq.get(1), 10);
+    EXPECT_EQ(dq.get(2), 20);
+    EXPECT_EQ(dq.get(3), 30);
+
+    EXPECT_EQ(dq.find(20), 2);
+
+    stringstream ss;
+    dq.print_all(ss);
+    EXPECT_EQ(ss.str(), "[0] 5\n[1] 10\n[2] 20\n[3] 30\n");
+
+    dq.remove_at(1);
+    dq.pop_front();
+    EXPECT_EQ(dq.get_size(), 2);
+    EXPECT_EQ(dq.get(0), 20);
+    EXPECT_EQ(dq.get(1), 30);
+}
+
+TEST(FractionTest7, DequeFloatOperations) {
+    Deque<float> dq;
+    dq.push_back(1.5f);
+    dq.push_back(3.25f);
+    dq.push_front(0.5f);
+
+    ASSERT_EQ(dq.get_size(), 3);
+    EXPECT_FLOAT_EQ(dq.get(0), 0.5f);
+    EXPECT_FLOAT_EQ(dq.get(1), 1.5f);
+    EXPECT_FLOAT_EQ(dq.get(2), 3.25f);
+
+    EXPECT_EQ(dq.find(1.5f), 1);
+
+    Deque<float> dq_copy(dq);
+    Deque<float> dq_assigned;
+    dq_assigned = dq_copy;
+    EXPECT_EQ(dq_assigned.get_size(), 3);
+    EXPECT_FLOAT_EQ(dq_assigned.get(2), 3.25f);
+}
+
+TEST(FractionTest7, DequeFractionOperationsAndMemory) {
+    int start_count = Fraction::get_object_count();
+    {
+        Deque<Fraction> dq;
+        dq.push_back(Fraction(1, 2));
+        dq.push_back(Fraction(3, 4));
+        dq.push_front(Fraction(1, 4));
+        dq.insert_at(2, Fraction(2, 3));
+
+        ASSERT_EQ(dq.get_size(), 4);
+        EXPECT_STREQ(dq.get(0).c_str(), "1/4");
+        EXPECT_STREQ(dq.get(1).c_str(), "1/2");
+        EXPECT_STREQ(dq.get(2).c_str(), "2/3");
+        EXPECT_STREQ(dq.get(3).c_str(), "3/4");
+
+        EXPECT_EQ(dq.find(Fraction(2, 3)), 2);
+        EXPECT_EQ(dq.find(Fraction(5, 6)), -1);
+
+        stringstream ss;
+        dq.print_all(ss);
+        EXPECT_EQ(ss.str(), "[0] 1/4\n[1] 1/2\n[2] 2/3\n[3] 3/4\n");
+    }
+    EXPECT_EQ(Fraction::get_object_count(), start_count);
+}
+
+TEST(FractionTest7, TemplateDequeExceptions) {
+    Deque<int> dq_int;
+    EXPECT_THROW(dq_int.pop_front(), OutOfRangeException);
+    EXPECT_THROW(dq_int.get(0), OutOfRangeException);
+
+    Deque<float> dq_float;
+    dq_float.push_back(1.1f);
+    EXPECT_THROW(dq_float.insert_at(5, 2.2f), OutOfRangeException);
+    EXPECT_THROW(dq_float.remove_at(-1), OutOfRangeException);
 }
 
 int main(int argc, char** argv) {

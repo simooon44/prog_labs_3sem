@@ -3,11 +3,11 @@ CXXFLAGS = -I. -I../googletest/include -I../googletest
 
 all: app.exe test.exe
 
-app.exe: obj obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/Deque.o obj/main.o
-	$(CXX) obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/Deque.o obj/main.o -o app.exe
+app.exe: obj obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/main.o
+	$(CXX) obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/main.o -o app.exe
 
-test.exe: obj obj/fraction_tests.o obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/Deque.o obj/gtest-all.o
-	$(CXX) obj/fraction_tests.o obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/Deque.o obj/gtest-all.o -o test.exe
+test.exe: obj obj/fraction_tests.o obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/gtest-all.o
+	$(CXX) obj/fraction_tests.o obj/Fraction.o obj/EvaluatedFraction.o obj/MixedFraction.o obj/gtest-all.o -o test.exe
 
 obj:
 	mkdir obj
@@ -20,9 +20,6 @@ obj/EvaluatedFraction.o: EvaluatedFraction.cpp EvaluatedFraction.h Fraction.h Ex
 
 obj/MixedFraction.o: MixedFraction.cpp MixedFraction.h Fraction.h Exceptions.h
 	$(CXX) $(CXXFLAGS) -c MixedFraction.cpp -o obj/MixedFraction.o
-
-obj/Deque.o: Deque.cpp Deque.h Fraction.h Exceptions.h
-	$(CXX) $(CXXFLAGS) -c Deque.cpp -o obj/Deque.o
 
 obj/main.o: main.cpp Fraction.h EvaluatedFraction.h MixedFraction.h Deque.h Exceptions.h
 	$(CXX) $(CXXFLAGS) -c main.cpp -o obj/main.o
@@ -56,6 +53,9 @@ test5: test.exe
 
 test6: test.exe
 	./test.exe --gtest_filter=FractionTest6.*
+
+test7: test.exe
+	./test.exe --gtest_filter=FractionTest7.*
 
 clean:
 	rm -rf obj

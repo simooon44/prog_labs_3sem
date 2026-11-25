@@ -24,6 +24,7 @@ void print_menu() {
     cout << "9. 4lab check\n";
     cout << "10. 5lab check\n";
     cout << "11. 6lab check\n";
+    cout << "12. 7lab check\n";
     cout << "0. Exit\n";
     cout << "Select option: ";
 }
@@ -43,6 +44,7 @@ void add_fraction(Fraction*& arr, int& size, const Fraction& f) {
 void demo_lab4();
 void demo_lab5();
 void demo_lab6();
+void demo_lab7();
 
 int main() {
     Fraction* current_fractions = nullptr;
@@ -152,6 +154,10 @@ int main() {
                     demo_lab6();
                     break;
                 }
+                case 12: {
+                    demo_lab7();
+                    break;
+                }
                 case 0:
                     cout << "Exiting the program.\n";
                     break;
@@ -238,33 +244,24 @@ void demo_lab4() {
 }
 
 void demo_lab5() {
-    Deque dq;
+    Deque<Fraction*> dq;
 
-    Fraction f(1, 2);
-    EvaluatedFraction ef(3, 4);
-    MixedFraction mf(2, 1, 3);
+    Fraction* f = new Fraction(1, 2);
+    Fraction* ef = new EvaluatedFraction(3, 4);
+    Fraction* mf = new MixedFraction(2, 1, 3);
 
     dq.push_back(f);
     dq.push_back(ef);
     dq.push_back(mf);
 
-    EvaluatedFraction ef_front(5, 8);
-    dq.push_front(ef_front);
+    cout << "deque elements:\n";
+    for (int i = 0; i < dq.get_size(); i++) {
+        cout << "[" << i << "] " << dq.get(i)->c_str() << "\n";
+    }
 
-    MixedFraction mf_insert(11, 4);
-    dq.insert_at(2, mf_insert);
-
-    cout << "deque elements (polymorphism via c_str):\n";
-    dq.print_all();
-
-    int found_idx = dq.find(Fraction(3, 4));
-    cout << "find 3/4 index: " << found_idx << "\n";
-
-    dq.remove_at(2);
-    dq.pop_front();
-
-    cout << "after remove_at(2) and pop_front:\n";
-    dq.print_all();
+    for (int i = 0; i < dq.get_size(); i++) {
+        delete dq.get(i);
+    }
 }
 
 void demo_lab6() {
@@ -293,10 +290,10 @@ void demo_lab6() {
     }
 
     try {
-        cout << "3) Accessing Deque::get(10)...\n";
-        Deque dq;
+        cout << "3) Accessing Deque<Fraction>::get(10)...\n";
+        Deque<Fraction> dq;
         dq.push_back(Fraction(1, 3));
-        cout << dq.get(10)->c_str() << "\n";
+        cout << dq.get(10) << "\n";
     } catch (const OutOfRangeException& e) {
         cout << "   Caught OutOfRangeException: " << e.what() << "\n";
     } catch (const AppException& e) {
@@ -306,8 +303,8 @@ void demo_lab6() {
     }
 
     try {
-        cout << "4) Calling pop_front() on empty Deque...\n";
-        Deque empty_dq;
+        cout << "4) Calling pop_front() on empty Deque<int>...\n";
+        Deque<int> empty_dq;
         empty_dq.pop_front();
     } catch (const OutOfRangeException& e) {
         cout << "   Caught OutOfRangeException: " << e.what() << "\n";
@@ -354,4 +351,36 @@ void demo_lab6() {
     } catch (...) {
         cout << "   Caught unknown exception\n";
     }
+}
+
+void demo_lab7() {
+    cout << "--- Deque<int> ---\n";
+    Deque<int> dq_int;
+    dq_int.push_back(10);
+    dq_int.push_back(20);
+    dq_int.push_front(5);
+    dq_int.insert_at(2, 15);
+    dq_int.print_all();
+    cout << "find 20 index: " << dq_int.find(20) << "\n";
+    dq_int.remove_at(1);
+    dq_int.pop_front();
+    cout << "after remove_at(1) and pop_front:\n";
+    dq_int.print_all();
+
+    cout << "--- Deque<float> ---\n";
+    Deque<float> dq_float;
+    dq_float.push_back(1.5f);
+    dq_float.push_back(2.75f);
+    dq_float.push_front(0.25f);
+    dq_float.print_all();
+    cout << "element at 1: " << dq_float.get(1) << "\n";
+
+    cout << "--- Deque<Fraction> ---\n";
+    Deque<Fraction> dq_frac;
+    dq_frac.push_back(Fraction(1, 2));
+    dq_frac.push_back(Fraction(3, 4));
+    dq_frac.push_front(Fraction(5, 8));
+    dq_frac.insert_at(2, Fraction(2, 3));
+    dq_frac.print_all();
+    cout << "find 3/4 index: " << dq_frac.find(Fraction(3, 4)) << "\n";
 }

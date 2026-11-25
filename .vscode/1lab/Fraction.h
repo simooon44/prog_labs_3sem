@@ -50,6 +50,10 @@ class Fraction {
 
     virtual Fraction* clone() const;
 
+    // 7 lab
+
+    bool operator==(const Fraction& other) const;
+
    protected:
     mutable char* string_rep_;
     void update_string_representation() const;

@@ -185,7 +185,7 @@ istream& operator>>(istream& is, Fraction& fraction) {
         throw InputFormatException("Fraction input: expected numerator");
     }
 
-    while (is.peek() == ' ' || is.peek() == '	') {
+    while (is.peek() == ' ' || is.peek() == '\t') {
         is.get();
     }
 
@@ -285,3 +285,9 @@ int Fraction::load_from_binary(std::istream& in, Fraction*& arr, int& size) {
 // 5 lab
 
 Fraction* Fraction::clone() const { return new Fraction(*this); }
+
+// 7 lab
+
+bool Fraction::operator==(const Fraction& other) const {
+    return numerator_ == other.numerator_ && denominator_ == other.denominator_;
+}
