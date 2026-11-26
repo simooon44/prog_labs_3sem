@@ -383,4 +383,28 @@ void demo_lab7() {
     dq_frac.insert_at(2, Fraction(2, 3));
     dq_frac.print_all();
     cout << "find 3/4 index: " << dq_frac.find(Fraction(3, 4)) << "\n";
+
+    cout << "--- Method specialization: Deque<float>::find (eps) ---\n";
+    Deque<float> dq_eps;
+    dq_eps.push_back(0.3000001f);
+    // значения чуть отличаются, но специализация сравнивает с погрешностью
+    cout << "find 0.3f index: " << dq_eps.find(0.3f) << "\n";  // 0
+
+    cout << "--- Partial specialization: Deque<Fraction*> ---\n";
+    Deque<Fraction*> dq_ptr;
+    Fraction* p1 = new Fraction(1, 2);
+    Fraction* p2 = new EvaluatedFraction(3, 4);
+    Fraction* p3 = new MixedFraction(2, 1, 3);
+    dq_ptr.push_back(p1);
+    dq_ptr.push_back(p2);
+    dq_ptr.push_back(p3);
+    dq_ptr.print_all();
+
+    Fraction* key = new Fraction(3, 4);
+    cout << "find 3/4 index: " << dq_ptr.find(key) << "\n";  // 1
+
+    delete key;
+    delete p1;
+    delete p2;
+    delete p3;
 }

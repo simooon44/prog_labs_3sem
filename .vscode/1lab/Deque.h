@@ -1,6 +1,7 @@
 #ifndef DEQUE_H_
 #define DEQUE_H_
 
+#include <cmath>
 #include <iostream>
 
 #include "Exceptions.h"
@@ -225,5 +226,122 @@ void Deque<T>::clear() {
         pop_front();
     }
 }
+
+// специализация метода
+template <>
+inline int Deque<float>::find(const float& target) const {
+    const float eps = 1e-5f;
+    Node* curr = head_;
+    int idx = 0;
+    while (curr != nullptr) {
+        if (std::fabs(curr->data - target) < eps) {
+            return idx;
+        }
+        curr = curr->next;
+        idx++;
+    }
+    return -1;
+}
+
+// частичная специализация класса
+
+template <typename T>
+class Deque<T*> {
+   public:
+    Deque() : head_(nullptr), tail_(nullptr), size_(0) {}
+    ~Deque() { clear(); }
+
+    Deque(const Deque&) = delete;
+    Deque& operator=(const Deque&) = delete;
+
+    void push_front(T* const& obj) {
+        Node* n = new Node(obj, head_);
+        head_ = n;
+        if (tail_ == nullptr) {
+            tail_ = head_;
+        }
+        size_++;
+    }
+
+    void push_back(T* const& obj) {
+        Node* n = new Node(obj, nullptr);
+        if (tail_ != nullptr) {
+            tail_->next = n;
+            tail_ = n;
+        } else {
+            head_ = tail_ = n;
+        }
+        size_++;
+    }
+
+    bool pop_front() {
+        if (head_ == nullptr) {
+            throw OutOfRangeException("Deque<T*>::pop_front: deque is empty");
+        }
+        Node* temp = head_;
+        head_ = head_->next;
+        if (head_ == nullptr) {
+            tail_ = nullptr;
+        }
+        delete temp;  // удаляется только узел, не объект
+        size_--;
+        return true;
+    }
+
+    T* const& get(int index) const {
+        if (index < 0 || index >= size_) {
+            throw OutOfRangeException("Deque<T*>::get: index out of range");
+        }
+        Node* curr = head_;
+        for (int i = 0; i < index; i++) {
+            curr = curr->next;
+        }
+        return curr->data;
+    }
+
+    int find(T* const& target) const {
+        Node* curr = head_;
+        int idx = 0;
+        while (curr != nullptr) {
+            if (curr->data != nullptr && target != nullptr &&
+                *(curr->data) == *target) {
+                return idx;
+            }
+            curr = curr->next;
+            idx++;
+        }
+        return -1;
+    }
+
+    void print_all(std::ostream& os = std::cout) const {
+        Node* curr = head_;
+        int idx = 0;
+        while (curr != nullptr) {
+            os << "[" << idx << "] " << *(curr->data) << '\n';
+            curr = curr->next;
+            idx++;
+        }
+    }
+
+    int get_size() const { return size_; }
+    bool is_empty() const { return size_ == 0; }
+
+    void clear() {
+        while (!is_empty()) {
+            pop_front();
+        }
+    }
+
+   private:
+    struct Node {
+        T* data;
+        Node* next;
+        Node(T* d, Node* n) : data(d), next(n) {}
+    };
+
+    Node* head_;
+    Node* tail_;
+    int size_;
+};
 
 #endif

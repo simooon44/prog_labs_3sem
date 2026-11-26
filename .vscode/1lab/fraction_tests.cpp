@@ -979,6 +979,57 @@ TEST(FractionTest7, TemplateDequeExceptions) {
     EXPECT_THROW(dq_float.remove_at(-1), OutOfRangeException);
 }
 
+TEST(FractionTest7, FloatFindSpecializationWithEpsilon) {
+    Deque<float> dq;
+    dq.push_back(0.1f + 0.2f);
+    dq.push_back(1.5f);
+
+    EXPECT_EQ(dq.find(0.3f), 0);
+    EXPECT_EQ(dq.find(0.300005f), 0);
+
+    EXPECT_EQ(dq.find(0.3001f), -1);
+    EXPECT_EQ(dq.find(2.0f), -1);
+}
+
+TEST(FractionTest7, PartialSpecializationPointerDeque) {
+    Deque<Fraction*> dq;
+    Fraction* p1 = new Fraction(1, 2);
+    Fraction* p2 = new EvaluatedFraction(3, 4);
+    Fraction* p3 = new MixedFraction(2, 1, 3);
+
+    dq.push_back(p1);
+    dq.push_back(p2);
+    dq.push_front(p3);
+
+    ASSERT_EQ(dq.get_size(), 3);
+    EXPECT_FALSE(dq.is_empty());
+
+    stringstream ss;
+    dq.print_all(ss);
+    EXPECT_EQ(ss.str(), "[0] 2 1/3\n[1] 1/2\n[2] 3/4 (= 0.75)\n");
+
+    Fraction* key_found = new Fraction(3, 4);
+    Fraction* key_missing = new Fraction(5, 6);
+    EXPECT_EQ(dq.find(key_found), 2);
+    EXPECT_EQ(dq.find(key_missing), -1);
+    EXPECT_EQ(dq.find(nullptr), -1);
+
+    EXPECT_TRUE(dq.pop_front());
+    EXPECT_EQ(dq.get_size(), 2);
+    EXPECT_EQ(dq.get(0), p1);
+    EXPECT_THROW(dq.get(5), OutOfRangeException);
+
+    dq.clear();
+    EXPECT_TRUE(dq.is_empty());
+    EXPECT_THROW(dq.pop_front(), OutOfRangeException);
+
+    delete key_found;
+    delete key_missing;
+    delete p1;
+    delete p2;
+    delete p3;
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
