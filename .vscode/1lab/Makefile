@@ -62,7 +62,17 @@ clean:
 	rm -f test.exe app.exe
 	rm -f fractions.bin
 	rm -f fractions.txt
+	rm -f lab8.exe
 
 clean_files:
 	rm -f fractions.bin
 	rm -f fractions.txt
+
+lab8: lab8.exe
+
+run8: lab8.exe
+	./lab8.exe
+
+lab8.exe: lab8.cpp Fraction.cpp Fraction.h Exceptions.h
+	$(CXX) $(CXXFLAGS) -std=c++17 -O2 lab8.cpp Fraction.cpp -o $@
+
