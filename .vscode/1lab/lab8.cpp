@@ -23,15 +23,15 @@ bool fraction_less(const Fraction& a, const Fraction& b) {
 using HashFraction = std::size_t (*)(const Fraction&);
 
 std::size_t fraction_hash(const Fraction& value) {
-    // Fraction normalizes the numerator and denominator before comparison.
     const auto numerator = static_cast<std::uint32_t>(value.get_numerator());
-    const auto denominator = static_cast<std::uint32_t>(value.get_denominator());
+    const auto denominator =
+        static_cast<std::uint32_t>(value.get_denominator());
     const auto key = (std::uint64_t{denominator} << 32) | numerator;
     return std::hash<std::uint64_t>{}(key);
 }
 
-double elapsed_ms(Clock::time_point start) {
-    return std::chrono::duration<double, std::milli>(Clock::now() - start)
+double elapsed_ns(Clock::time_point start) {
+    return std::chrono::duration<double, std::nano>(Clock::now() - start)
         .count();
 }
 
@@ -49,136 +49,210 @@ bool measure_size(int size, std::ostream& csv) {
         fractions.emplace_back(number, 1000003);
     }
 
-    auto start = Clock::now();
+    const int next_int = size + 1;
+    const Fraction next_fraction(next_int, 1000003);
+
+    const int find_int = integers[size / 2];
+    const int erase_int = integers[size / 3];
+    const Fraction& find_fraction = fractions[size / 2];
+    const Fraction& erase_fraction = fractions[size / 3];
+
+    constexpr int measurement_count = 100;
+    Clock::time_point start;
 
     std::queue<int> queue_int;
-    start = Clock::now();
     for (const auto& key : integers) {
         queue_int.push(key);
     }
-    const double queue_push_int = elapsed_ms(start);
-    start = Clock::now();
-    while (!queue_int.empty()) {
+
+    double queue_pop_int = 0;
+    double queue_push_int = 0;
+    for (int repeat = 0; repeat < measurement_count; repeat++) {
+        start = Clock::now();
+        queue_int.pop();
+        queue_pop_int += elapsed_ns(start);
+        queue_int.push(next_int);
+
+        start = Clock::now();
+        queue_int.push(next_int);
+        queue_push_int += elapsed_ns(start);
         queue_int.pop();
     }
-    const double queue_pop_int = elapsed_ms(start);
 
     std::queue<Fraction> queue_fraction;
-    start = Clock::now();
     for (const auto& key : fractions) {
         queue_fraction.push(key);
     }
-    const double queue_push_fraction = elapsed_ms(start);
-    start = Clock::now();
-    while (!queue_fraction.empty()) {
+
+    double queue_pop_fraction = 0;
+    double queue_push_fraction = 0;
+    for (int repeat = 0; repeat < measurement_count; repeat++) {
+        start = Clock::now();
+        queue_fraction.pop();
+        queue_pop_fraction += elapsed_ns(start);
+        queue_fraction.push(next_fraction);
+
+        start = Clock::now();
+        queue_fraction.push(next_fraction);
+        queue_push_fraction += elapsed_ns(start);
         queue_fraction.pop();
     }
-    const double queue_pop_fraction = elapsed_ms(start);
 
     std::map<int, int> map_int;
-    int value_int = 1;
-    start = Clock::now();
+    int map_int_value = 1;
     for (const auto& key : integers) {
-        map_int.emplace(key, value_int++);
+        map_int.emplace(key, map_int_value++);
     }
-    const double map_insert_int = elapsed_ms(start);
-    long long sum_int = 0;
-    start = Clock::now();
-    for (const auto& key : integers) {
-        auto it = map_int.find(key);
-        if (it != map_int.end()) {
-            sum_int += it->second;
+
+    double map_insert_int = 0;
+    double map_find_int = 0;
+    double map_erase_int = 0;
+    for (int repeat = 0; repeat < measurement_count; ++repeat) {
+        start = Clock::now();
+        const auto inserted = map_int.emplace(next_int, next_int);
+        map_insert_int += elapsed_ns(start);
+        if (!inserted.second) {
+            return false;
         }
+        map_int.erase(inserted.first);
+
+        start = Clock::now();
+        const auto found = map_int.find(find_int);
+        map_find_int += elapsed_ns(start);
+        if (found == map_int.end() || found->second != size / 2 + 1) {
+            return false;
+        }
+
+        start = Clock::now();
+        const auto erased = map_int.erase(erase_int);
+        map_erase_int += elapsed_ns(start);
+        if (erased != 1) {
+            return false;
+        }
+        map_int.emplace(erase_int, size / 3 + 1);
     }
-    const double map_find_int = elapsed_ms(start);
-    start = Clock::now();
-    for (const auto& key : integers) {
-        map_int.erase(key);
-    }
-    const double map_erase_int = elapsed_ms(start);
 
     std::map<Fraction, int, CompareFractions> map_fraction(fraction_less);
-    int value_fraction = 1;
-    start = Clock::now();
+    int map_fraction_value = 1;
     for (const auto& key : fractions) {
-        map_fraction.emplace(key, value_fraction++);
+        map_fraction.emplace(key, map_fraction_value++);
     }
-    const double map_insert_fraction = elapsed_ms(start);
-    long long sum_fraction = 0;
-    start = Clock::now();
-    for (const auto& key : fractions) {
-        auto it = map_fraction.find(key);
-        if (it != map_fraction.end()) {
-            sum_fraction += it->second;
+
+    double map_insert_fraction = 0;
+    double map_find_fraction = 0;
+    double map_erase_fraction = 0;
+    for (int repeat = 0; repeat < measurement_count; ++repeat) {
+        start = Clock::now();
+        const auto inserted = map_fraction.emplace(next_fraction, next_int);
+        map_insert_fraction += elapsed_ns(start);
+        if (!inserted.second) {
+            return false;
         }
+        map_fraction.erase(inserted.first);
+
+        start = Clock::now();
+        const auto found = map_fraction.find(find_fraction);
+        map_find_fraction += elapsed_ns(start);
+        if (found == map_fraction.end() || found->second != size / 2 + 1) {
+            return false;
+        }
+
+        start = Clock::now();
+        const auto erased = map_fraction.erase(erase_fraction);
+        map_erase_fraction += elapsed_ns(start);
+        if (erased != 1) {
+            return false;
+        }
+        map_fraction.emplace(erase_fraction, size / 3 + 1);
     }
-    const double map_find_fraction = elapsed_ms(start);
-    start = Clock::now();
-    for (const auto& key : fractions) {
-        map_fraction.erase(key);
-    }
-    const double map_erase_fraction = elapsed_ms(start);
 
     std::unordered_map<int, int> unordered_int;
-    int unordered_value_int = 1;
-    start = Clock::now();
+    int unordered_int_value = 1;
     for (const auto& key : integers) {
-        unordered_int.emplace(key, unordered_value_int++);
+        unordered_int.emplace(key, unordered_int_value++);
     }
-    const double unordered_insert_int = elapsed_ms(start);
-    long long unordered_sum_int = 0;
-    start = Clock::now();
-    for (const auto& key : integers) {
-        auto it = unordered_int.find(key);
-        if (it != unordered_int.end()) {
-            unordered_sum_int += it->second;
+
+    double unordered_insert_int = 0;
+    double unordered_find_int = 0;
+    double unordered_erase_int = 0;
+    for (int repeat = 0; repeat < measurement_count; ++repeat) {
+        start = Clock::now();
+        const auto inserted = unordered_int.emplace(next_int, next_int);
+        unordered_insert_int += elapsed_ns(start);
+        if (!inserted.second) {
+            return false;
         }
-    }
-    const double unordered_find_int = elapsed_ms(start);
-    start = Clock::now();
-    for (const auto& key : integers) {
-        unordered_int.erase(key);
-    }
-    const double unordered_erase_int = elapsed_ms(start);
+        unordered_int.erase(inserted.first);
 
-    std::unordered_map<Fraction, int, HashFraction> unordered_fraction(0, fraction_hash);
-    int unordered_value_fraction = 1;
-    start = Clock::now();
-    for (const auto& key : fractions) {
-        unordered_fraction.emplace(key, unordered_value_fraction++);
-    }
-    const double unordered_insert_fraction = elapsed_ms(start);
-    long long unordered_sum_fraction = 0;
-    start = Clock::now();
-    for (const auto& key : fractions) {
-        auto it = unordered_fraction.find(key);
-        if (it != unordered_fraction.end()) {
-            unordered_sum_fraction += it->second;
+        start = Clock::now();
+        const auto found = unordered_int.find(find_int);
+        unordered_find_int += elapsed_ns(start);
+        if (found == unordered_int.end() || found->second != size / 2 + 1) {
+            return false;
         }
+
+        start = Clock::now();
+        const auto erased = unordered_int.erase(erase_int);
+        unordered_erase_int += elapsed_ns(start);
+        if (erased != 1) {
+            return false;
+        }
+        unordered_int.emplace(erase_int, size / 3 + 1);
     }
-    const double unordered_find_fraction = elapsed_ms(start);
-    start = Clock::now();
+
+    std::unordered_map<Fraction, int, HashFraction> unordered_fraction(
+        0, fraction_hash);
+    int unordered_fraction_value = 1;
     for (const auto& key : fractions) {
-        unordered_fraction.erase(key);
-    }
-    const double unordered_erase_fraction = elapsed_ms(start);
-
-    const long long expected = 1LL * size * (size + 1) / 2;
-    if (sum_int != expected || sum_fraction != expected || !map_int.empty() ||
-        !map_fraction.empty() || unordered_sum_int != expected ||
-        unordered_sum_fraction != expected || !unordered_int.empty() ||
-        !unordered_fraction.empty()) {
-        return false;
+        unordered_fraction.emplace(key, unordered_fraction_value++);
     }
 
-    csv << size << ',' << queue_push_int << ',' << queue_push_fraction << ','
-        << queue_pop_int << ',' << queue_pop_fraction << ',' << map_insert_int
-        << ',' << map_insert_fraction << ',' << map_find_int << ','
-        << map_find_fraction << ',' << map_erase_int << ','
-        << map_erase_fraction << ',' << unordered_insert_int << ','
-        << unordered_insert_fraction << ',' << unordered_find_int << ','
-        << unordered_find_fraction << ',' << unordered_erase_int << ','
-        << unordered_erase_fraction << '\n';
+    double unordered_insert_fraction = 0;
+    double unordered_find_fraction = 0;
+    double unordered_erase_fraction = 0;
+    for (int repeat = 0; repeat < measurement_count; ++repeat) {
+        start = Clock::now();
+        const auto inserted =
+            unordered_fraction.emplace(next_fraction, next_int);
+        unordered_insert_fraction += elapsed_ns(start);
+        if (!inserted.second) {
+            return false;
+        }
+        unordered_fraction.erase(inserted.first);
+
+        start = Clock::now();
+        const auto found = unordered_fraction.find(find_fraction);
+        unordered_find_fraction += elapsed_ns(start);
+        if (found == unordered_fraction.end() ||
+            found->second != size / 2 + 1) {
+            return false;
+        }
+
+        start = Clock::now();
+        const auto erased = unordered_fraction.erase(erase_fraction);
+        unordered_erase_fraction += elapsed_ns(start);
+        if (erased != 1) {
+            return false;
+        }
+        unordered_fraction.emplace(erase_fraction, size / 3 + 1);
+    }
+
+    csv << size << ',' << queue_push_int / measurement_count << ','
+        << queue_push_fraction / measurement_count << ','
+        << queue_pop_int / measurement_count << ','
+        << queue_pop_fraction / measurement_count << ','
+        << map_insert_int / measurement_count << ','
+        << map_insert_fraction / measurement_count << ','
+        << map_find_int / measurement_count << ','
+        << map_find_fraction / measurement_count << ','
+        << map_erase_int / measurement_count << ','
+        << map_erase_fraction / measurement_count << ','
+        << unordered_insert_int / measurement_count << ','
+        << unordered_insert_fraction / measurement_count << ','
+        << unordered_find_int / measurement_count << ','
+        << unordered_find_fraction / measurement_count << ','
+        << unordered_erase_int / measurement_count << ','
+        << unordered_erase_fraction / measurement_count << '\n';
     return true;
 }
 
@@ -194,7 +268,8 @@ int main(int argc, char* argv[]) {
            "fraction,map_insert_int,map_insert_fraction,map_find_int,map_find_"
            "fraction,map_erase_int,map_erase_fraction,"
            "unordered_insert_int,unordered_insert_fraction,unordered_find_int,"
-           "unordered_find_fraction,unordered_erase_int,unordered_erase_fraction\n";
+           "unordered_find_fraction,unordered_erase_int,unordered_erase_"
+           "fraction\n";
     for (int size = 100000; size <= 1000000; size += 50000) {
         if (!measure_size(size, csv)) {
             std::cerr << "Unexpected container result at N = " << size << '\n';
