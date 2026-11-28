@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <queue>
 #include <random>
+#include <unordered_map>
 #include <vector>
 
 #include "Fraction.h"
@@ -15,6 +18,16 @@ using CompareFractions = bool (*)(const Fraction&, const Fraction&);
 bool fraction_less(const Fraction& a, const Fraction& b) {
     return 1LL * a.get_numerator() * b.get_denominator() <
            1LL * b.get_numerator() * a.get_denominator();
+}
+
+using HashFraction = std::size_t (*)(const Fraction&);
+
+std::size_t fraction_hash(const Fraction& value) {
+    // Fraction normalizes the numerator and denominator before comparison.
+    const auto numerator = static_cast<std::uint32_t>(value.get_numerator());
+    const auto denominator = static_cast<std::uint32_t>(value.get_denominator());
+    const auto key = (std::uint64_t{denominator} << 32) | numerator;
+    return std::hash<std::uint64_t>{}(key);
 }
 
 double elapsed_ms(Clock::time_point start) {
@@ -106,9 +119,55 @@ bool measure_size(int size, std::ostream& csv) {
     }
     const double map_erase_fraction = elapsed_ms(start);
 
+    std::unordered_map<int, int> unordered_int;
+    int unordered_value_int = 1;
+    start = Clock::now();
+    for (const auto& key : integers) {
+        unordered_int.emplace(key, unordered_value_int++);
+    }
+    const double unordered_insert_int = elapsed_ms(start);
+    long long unordered_sum_int = 0;
+    start = Clock::now();
+    for (const auto& key : integers) {
+        auto it = unordered_int.find(key);
+        if (it != unordered_int.end()) {
+            unordered_sum_int += it->second;
+        }
+    }
+    const double unordered_find_int = elapsed_ms(start);
+    start = Clock::now();
+    for (const auto& key : integers) {
+        unordered_int.erase(key);
+    }
+    const double unordered_erase_int = elapsed_ms(start);
+
+    std::unordered_map<Fraction, int, HashFraction> unordered_fraction(0, fraction_hash);
+    int unordered_value_fraction = 1;
+    start = Clock::now();
+    for (const auto& key : fractions) {
+        unordered_fraction.emplace(key, unordered_value_fraction++);
+    }
+    const double unordered_insert_fraction = elapsed_ms(start);
+    long long unordered_sum_fraction = 0;
+    start = Clock::now();
+    for (const auto& key : fractions) {
+        auto it = unordered_fraction.find(key);
+        if (it != unordered_fraction.end()) {
+            unordered_sum_fraction += it->second;
+        }
+    }
+    const double unordered_find_fraction = elapsed_ms(start);
+    start = Clock::now();
+    for (const auto& key : fractions) {
+        unordered_fraction.erase(key);
+    }
+    const double unordered_erase_fraction = elapsed_ms(start);
+
     const long long expected = 1LL * size * (size + 1) / 2;
     if (sum_int != expected || sum_fraction != expected || !map_int.empty() ||
-        !map_fraction.empty()) {
+        !map_fraction.empty() || unordered_sum_int != expected ||
+        unordered_sum_fraction != expected || !unordered_int.empty() ||
+        !unordered_fraction.empty()) {
         return false;
     }
 
@@ -116,7 +175,10 @@ bool measure_size(int size, std::ostream& csv) {
         << queue_pop_int << ',' << queue_pop_fraction << ',' << map_insert_int
         << ',' << map_insert_fraction << ',' << map_find_int << ','
         << map_find_fraction << ',' << map_erase_int << ','
-        << map_erase_fraction << '\n';
+        << map_erase_fraction << ',' << unordered_insert_int << ','
+        << unordered_insert_fraction << ',' << unordered_find_int << ','
+        << unordered_find_fraction << ',' << unordered_erase_int << ','
+        << unordered_erase_fraction << '\n';
     return true;
 }
 
@@ -130,7 +192,9 @@ int main(int argc, char* argv[]) {
 
     csv << "size,queue_push_int,queue_push_fraction,queue_pop_int,queue_pop_"
            "fraction,map_insert_int,map_insert_fraction,map_find_int,map_find_"
-           "fraction,map_erase_int,map_erase_fraction\n";
+           "fraction,map_erase_int,map_erase_fraction,"
+           "unordered_insert_int,unordered_insert_fraction,unordered_find_int,"
+           "unordered_find_fraction,unordered_erase_int,unordered_erase_fraction\n";
     for (int size = 100000; size <= 1000000; size += 50000) {
         if (!measure_size(size, csv)) {
             std::cerr << "Unexpected container result at N = " << size << '\n';
